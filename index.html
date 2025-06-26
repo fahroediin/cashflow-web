@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DuitQ - Log Aktivitas</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Impor Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header>
+        <h1>DuitQ - Log Aktivitas</h1>
+        <button id="logout-button" class="hidden">Logout</button>
+    </header>
+
+    <main>
+        <!-- Form Login -->
+        <div id="login-container">
+            <form id="login-form">
+                <h2>Login Admin</h2>
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+                <p id="error-message" class="error-text"></p>
+            </form>
+        </div>
+
+        <!-- Konten Log (tersembunyi secara default) -->
+        <div id="logs-container" class="hidden">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Waktu</th>
+                            <th>Nomor WA</th>
+                            <th>Aktivitas</th>
+                            <th>Detail</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-tbody">
+                        <!-- Data log akan diisi oleh JavaScript -->
+                        <tr><td colspan="4">Memuat data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
