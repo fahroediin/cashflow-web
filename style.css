@@ -84,7 +84,7 @@ button:hover {
     min-height: 20px;
 }
 
-/* Tabel Log */
+/* Tabel Log (Desktop View) */
 .table-wrapper {
     overflow-x: auto;
     background-color: var(--card-color);
@@ -112,11 +112,16 @@ tbody tr:hover {
     background-color: #2c2c2c;
 }
 
-/* --- KODE BARU UNTUK TAMPILAN MOBILE --- */
-/* Tampilan Responsif untuk Layar Kecil (Mobile) */
+/* --- PERBAIKAN DESKTOP: Mencegah kolom Waktu terpotong --- */
+td:first-child {
+    white-space: nowrap;
+}
+
+
+/* --- PERBAIKAN MOBILE: Tampilan Responsif dengan Flexbox --- */
 @media screen and (max-width: 768px) {
     .table-wrapper {
-        background-color: transparent; /* Hapus latar belakang wrapper */
+        background-color: transparent;
         padding: 0;
         border-radius: 0;
     }
@@ -125,12 +130,10 @@ tbody tr:hover {
         border: 0;
     }
 
-    /* Sembunyikan header tabel asli */
     thead {
-        display: none;
+        display: none; /* Sembunyikan header tabel di mobile */
     }
 
-    /* Ubah baris menjadi kartu */
     tr {
         display: block;
         margin-bottom: 1rem;
@@ -138,31 +141,37 @@ tbody tr:hover {
         background-color: var(--card-color);
         border: 1px solid var(--border-color);
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 0.5rem; /* Beri sedikit padding di dalam kartu */
     }
     
-    /* Ubah sel menjadi baris di dalam kartu */
     td {
-        display: block;
-        text-align: right; /* Konten di kanan */
+        display: flex; /* Gunakan flexbox untuk layout */
+        justify-content: space-between; /* Dorong label ke kiri, data ke kanan */
+        align-items: flex-start; /* Rata atas jika teks data panjang */
+        text-align: right; /* Data rata kanan di dalam span */
         font-size: 14px;
-        border-bottom: 1px dotted #3a3a3a;
         padding: 10px;
-        word-wrap: break-word; /* Agar teks panjang bisa pindah baris */
+        border-bottom: 1px dotted #3a3a3a;
     }
 
-    /* Hapus garis bawah pada sel terakhir di setiap kartu */
     tr td:last-child {
         border-bottom: 0;
     }
 
-    /* Buat label dari atribut data-label */
+    /* Label dari atribut data-label */
     td::before {
         content: attr(data-label);
-        float: left; /* Label di kiri */
         font-weight: bold;
         color: #aaa;
         text-transform: uppercase;
         font-size: 12px;
-        padding-right: 10px;
+        text-align: left; /* Label rata kiri */
+        margin-right: 15px; /* Jarak antara label dan data */
+        flex-shrink: 0; /* Mencegah label menyusut */
+    }
+
+    /* Span yang membungkus data */
+    td span {
+        word-break: break-all; /* Agar teks panjang bisa pindah baris */
     }
 }

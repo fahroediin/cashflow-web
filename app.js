@@ -48,10 +48,10 @@ async function fetchLogs() {
 
         // Menambahkan atribut data-label untuk setiap sel agar responsif
         tr.innerHTML = `
-            <td data-label="Waktu">${timestamp}</td>
-            <td data-label="Nomor WA">${log.user_wa_number || '-'}</td>
-            <td data-label="Aktivitas">${log.aktivitas}</td>
-            <td data-label="Detail">${log.detail || '-'}</td>
+            <td data-label="Waktu"><span>${timestamp}</span></td>
+            <td data-label="Nomor WA"><span>${log.user_wa_number || '-'}</span></td>
+            <td data-label="Aktivitas"><span>${log.aktivitas}</span></td>
+            <td data-label="Detail"><span>${log.detail || '-'}</span></td>
         `;
         logsTbody.appendChild(tr);
     });
