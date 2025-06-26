@@ -5,7 +5,7 @@
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![Supabase](https://img.shields.io/badge/Supabase-Frontend_Integration-green?style=for-the-badge&logo=supabase)
 
-DuitQ - Web Log Viewer adalah antarmuka web statis yang sederhana dan aman untuk menampilkan log aktivitas dari [DuitQ WhatsApp Bot](https://github.com/fahroediin/whatsapp-cashflow-bot). Halaman ini menampilkan data dari Supabase dalam format tabel yang mudah dibaca.
+DuitQ - History adalah antarmuka web statis yang sederhana dan aman untuk menampilkan log aktivitas dari [DuitQ WhatsApp Cashflow Bot](https://github.com/fahroediin/whatsapp-cashflow-bot). Halaman ini menampilkan data dari Supabase dalam format tabel yang mudah dibaca.
 
 ---
 
