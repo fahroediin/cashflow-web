@@ -1,8 +1,8 @@
 // app.js
 
 // --- KONFIGURASI: Ganti dengan URL dan ANON KEY Anda ---
-const SUPABASE_URL = 'https://eutgkrxqmebkxtvdburi.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1dGdrcnhxbWVia3h0dmRidXJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2NDgxOTgsImV4cCI6MjA2NjIyNDE5OH0.RdeFRqV4sDSZpH5bcM_vpwGz4EMJU40nRl24TjtNzWU';
+const SUPABASE_URL = 'https://xxxxxxxxxxxxxxxxxxxx.supabase.co';
+const SUPABASE_ANON_KEY = 'your-public-anon-key-here';
 // ----------------------------------------------------
 
 const supabase = self.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -46,11 +46,12 @@ async function fetchLogs() {
             timeStyle: 'short'
         });
 
+        // Menambahkan atribut data-label untuk setiap sel agar responsif
         tr.innerHTML = `
-            <td>${timestamp}</td>
-            <td>${log.user_wa_number || '-'}</td>
-            <td>${log.aktivitas}</td>
-            <td>${log.detail || '-'}</td>
+            <td data-label="Waktu">${timestamp}</td>
+            <td data-label="Nomor WA">${log.user_wa_number || '-'}</td>
+            <td data-label="Aktivitas">${log.aktivitas}</td>
+            <td data-label="Detail">${log.detail || '-'}</td>
         `;
         logsTbody.appendChild(tr);
     });
