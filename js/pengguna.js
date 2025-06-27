@@ -27,9 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // FUNGSI DELETE YANG DIPERBARUI
     async function deleteUser(userId, userName) {
+        // Tampilkan konfirmasi SweetAlert
         const result = await Swal.fire({
             title: 'Anda yakin?',
-            text: `Anda akan menghapus pengguna "${userName}" dari daftar. Aksi ini tidak akan menghapus akun login mereka.`,
+            text: `Anda akan menghapus pengguna "${userName}" dari daftar.`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
@@ -39,23 +40,33 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (result.isConfirmed) {
-            // TIDAK LAGI MENGGUNAKAN RPC. Gunakan .delete() standar.
-            const { error } = await supabase
-                .from('users') // Menargetkan tabel public.users
-                .delete()
-                .eq('id', userId);
+            console.log(`[DEBUG] Tombol hapus dikonfirmasi. Mencoba menghapus user dengan ID: ${userId}`);
 
-            if (error) {
-                console.error('Gagal menghapus pengguna:', error);
-                // Menampilkan pesan error yang lebih ramah dari RLS
-                let friendlyMessage = `Terjadi kesalahan: ${error.message}`;
-                if (error.message.includes('violates row-level security policy')) {
-                    friendlyMessage = 'Akses ditolak. Hanya admin yang dapat menghapus pengguna.';
+            // Bungkus panggilan RPC dalam try...catch untuk menangkap semua error
+            try {
+                console.log("[DEBUG] Memanggil RPC 'delete_public_user'...");
+
+                const { data, error } = await supabase.rpc('delete_public_user', {
+                    user_id_to_delete: userId
+                });
+
+                console.log("[DEBUG] Panggilan RPC selesai.");
+                console.log("[DEBUG] Data yang diterima:", data);
+                console.log("[DEBUG] Error yang diterima:", error);
+
+                if (error) {
+                    // Jika ada error, tampilkan di console dan alert
+                    console.error('Gagal menghapus pengguna via RPC:', error);
+                    Swal.fire('Gagal!', `Terjadi kesalahan: ${error.message}`, 'error');
+                } else {
+                    // Jika tidak ada error, tampilkan data dari fungsi
+                    Swal.fire('Selesai!', data, 'success');
+                    fetchAndRenderPengguna();
                 }
-                Swal.fire('Gagal!', friendlyMessage, 'error');
-            } else {
-                Swal.fire('Dihapus!', `Pengguna "${userName}" telah berhasil dihapus.`, 'success');
-                fetchAndRenderPengguna(); 
+            } catch (catchError) {
+                // Ini akan menangkap error yang lebih fundamental jika panggilan RPC itu sendiri gagal
+                console.error("[FATAL] Panggilan RPC gagal total:", catchError);
+                Swal.fire('Error Kritis!', 'Tidak dapat menghubungi database. Periksa console untuk detail.', 'error');
             }
         }
     }
