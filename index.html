@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Admin DuitQ</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Impor Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -17,6 +16,7 @@
             <h1>DuitQ Dashboard</h1>
             <nav>
                 <button id="nav-dashboard" class="nav-button">Dashboard</button>
+                <button id="nav-transaksi" class="nav-button">Manajemen Transaksi</button>
                 <button id="nav-logs" class="nav-button">Log Aktivitas</button>
                 <button id="nav-kategori" class="nav-button">Manajemen Kategori</button>
                 <button id="nav-pengguna" class="nav-button">Manajemen Pengguna</button>
@@ -25,51 +25,36 @@
         </header>
 
         <main>
-            <!-- Konten Dashboard Baru -->
+            <!-- Konten Dashboard -->
             <div id="dashboard-container" class="hidden">
                 <div class="page-header">
                     <h2>Ringkasan Dashboard</h2>
                     <div class="dashboard-filters">
                         <select id="user-filter"></select>
                         <select id="period-filter">
-                            <option value="bulan_ini">Bulan Ini</option>
                             <option value="hari_ini">Hari Ini</option>
                             <option value="minggu_ini">Minggu Ini</option>
+                            <option value="bulan_ini">Bulan Ini</option>
                             <option value="tahun_ini">Tahun Ini</option>
                         </select>
                     </div>
                 </div>
-
-                <!-- Tombol Toggle View Dashboard -->
                 <div class="view-toggle">
                     <button id="kpi-view-btn" class="view-toggle-btn active">Tampilan Kartu</button>
                     <button id="chart-view-btn" class="view-toggle-btn">Tampilan Chart</button>
                 </div>
-
-                <!-- Container untuk KPI Cards -->
                 <div id="kpi-view-container">
                     <div class="kpi-cards">
-                        <div class="kpi-card">
-                            <h3>💰 Total Pemasukan</h3>
-                            <p id="total-pemasukan">Rp 0</p>
-                        </div>
-                        <div class="kpi-card">
-                            <h3>📉 Total Pengeluaran</h3>
-                            <p id="total-pengeluaran">Rp 0</p>
-                        </div>
-                        <div class="kpi-card">
-                            <h3>💵 Saldo Akhir</h3>
-                            <p id="saldo-akhir">Rp 0</p>
-                        </div>
+                        <div class="kpi-card"><h3>💰 Total Pemasukan</h3><p id="total-pemasukan">Rp 0</p></div>
+                        <div class="kpi-card"><h3>📉 Total Pengeluaran</h3><p id="total-pengeluaran">Rp 0</p></div>
+                        <div class="kpi-card"><h3>💵 Saldo Akhir</h3><p id="saldo-akhir">Rp 0</p></div>
                     </div>
                 </div>
-
-                <!-- Container untuk Chart -->
                 <div id="chart-view-container" class="hidden">
                     <div class="chart-container">
                         <h3>Rincian Pengeluaran per Kategori</h3>
                         <canvas id="expense-chart"></canvas>
-                        <p id="chart-no-data" class="hidden">Tidak ada data pengeluaran untuk ditampilkan.</p>
+                        <p id="chart-no-data" class="hidden">Tidak ada data pengeluaran.</p>
                     </div>
                 </div>
             </div>
@@ -97,6 +82,63 @@
                     </table>
                 </div>
             </div>
+
+            <!-- Konten Log -->
+            <div id="logs-container" class="hidden">
+                <div class="page-header">
+                    <h2>Log Aktivitas Terbaru</h2>
+                    <div class="dashboard-filters">
+                        <select id="log-user-filter"></select>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr><th>Waktu</th><th>Nomor WA</th><th>Aktivitas</th><th>Detail</th></tr>
+                        </thead>
+                        <tbody id="logs-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Konten Manajemen Kategori -->
+            <div id="kategori-container" class="hidden">
+                <div class="page-header">
+                    <h2>Manajemen Kategori</h2>
+                    <button id="add-kategori-button" class="btn-primary">Tambah Kategori</button>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr><th>Nama Kategori</th><th>Tipe</th><th class="actions-column">Aksi</th></tr>
+                        </thead>
+                        <tbody id="kategori-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Konten Manajemen Pengguna (BARU) -->
+            <div id="pengguna-container" class="hidden">
+                <div class="page-header">
+                    <h2>Manajemen Pengguna</h2>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nama</th>
+                                <th>Nomor WhatsApp</th>
+                                <th>Dibuat Tanggal</th>
+                                <th class="actions-column">Jadikan Default Filter</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pengguna-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
 
             <!-- Konten Log -->
             <div id="logs-container" class="hidden">

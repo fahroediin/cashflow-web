@@ -1,5 +1,4 @@
-// js/pengguna.js
-
+// js/manajemen_pengguna.js
 document.addEventListener('DOMContentLoaded', () => {
     const penggunaTbody = document.getElementById('pengguna-tbody');
 
@@ -21,13 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function setDefaultUser(userId, userName) {
         localStorage.setItem('defaultUserId', userId);
-        Swal.fire({
-            icon: 'success',
-            title: 'Berhasil!',
-            text: `Filter default telah diatur ke: ${userName}`,
-            showConfirmButton: false,
-            timer: 2000
-        });
+        Swal.fire({ icon: 'success', title: 'Berhasil!', text: `Filter default telah diatur ke: ${userName}`, showConfirmButton: false, timer: 2000 });
         updateDefaultButtons();
     }
 
@@ -36,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false });
         if (error) { console.error('Error fetching users:', error); penggunaTbody.innerHTML = '<tr><td colspan="4" class="error-text">Gagal memuat data.</td></tr>'; return; }
         if (data.length === 0) { penggunaTbody.innerHTML = '<tr><td colspan="4">Belum ada pengguna.</td></tr>'; return; }
-        
         penggunaTbody.innerHTML = data.map(user => {
             const tanggalDibuat = new Date(user.created_at).toLocaleDateString('id-ID', { dateStyle: 'long' });
             const nomorWa = user.nomer_whatsapp ? user.nomer_whatsapp.replace('@c.us', '') : '-';
