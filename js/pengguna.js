@@ -1,4 +1,4 @@
-// js/pengguna.js (Versi Final yang Benar)
+// js/pengguna.js (Versi Final yang menggunakan .delete() standar)
 
 document.addEventListener('DOMContentLoaded', () => {
     const penggunaTbody = document.getElementById('pengguna-tbody');
@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateDefaultButtons();
     }
 
+    // FUNGSI DELETE YANG DIPERBARUI
     async function deleteUser(userId, userName) {
         const result = await Swal.fire({
             title: 'Anda yakin?',
@@ -38,9 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (result.isConfirmed) {
-            // Panggil perintah .delete() standar
+            // TIDAK LAGI MENGGUNAKAN RPC. Gunakan .delete() standar.
             const { error } = await supabase
-                .from('users')
+                .from('users') // Menargetkan tabel public.users
                 .delete()
                 .eq('id', userId);
 
@@ -62,12 +63,14 @@ document.addEventListener('DOMContentLoaded', () => {
     async function checkAdminRole() {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return false;
+        // Memeriksa metadata peran dari sesi yang aktif
         return session.user.app_metadata.user_role === 'admin';
     }
 
     async function fetchAndRenderPengguna() {
         penggunaTbody.innerHTML = '<tr><td colspan="4">Memuat data...</td></tr>';
         const isAdmin = await checkAdminRole();
+
         const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false });
         if (error) { console.error('Error fetching users:', error); penggunaTbody.innerHTML = '<tr><td colspan="4" class="error-text">Gagal memuat data.</td></tr>'; return; }
         if (data.length === 0) { penggunaTbody.innerHTML = '<tr><td colspan="4">Belum ada pengguna.</td></tr>'; return; }
@@ -76,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const tanggalDibuat = new Date(user.created_at).toLocaleDateString('id-ID', { dateStyle: 'long' });
             const nomorWa = user.nomer_whatsapp ? user.nomer_whatsapp.replace('@c.us', '') : '-';
             
+            // Logika untuk menampilkan tombol Hapus hanya untuk admin
             const deleteButtonHtml = isAdmin ? `<button class="btn-delete" data-id="${user.id}" data-nama="${user.nama}">Hapus</button>` : '';
 
             return `
