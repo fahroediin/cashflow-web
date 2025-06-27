@@ -1,7 +1,5 @@
-// js/app.js (Versi Perbaikan dengan onAuthStateChange)
-
 document.addEventListener('DOMContentLoaded', () => {
-    // --- ELEMEN DOM UTAMA & NAVIGASI ---
+    // --- ELEMEN DOM ---
     const loginContainer = document.getElementById('login-container');
     const appContainer = document.getElementById('app-container');
     const dashboardContainer = document.getElementById('dashboard-container');
@@ -16,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const navKategoriButton = document.getElementById('nav-kategori');
     const logUserFilter = document.getElementById('log-user-filter');
 
-    // --- FUNGSI PENGATUR TAMPILAN (VIEW) ---
+    // --- FUNGSI TAMPILAN ---
     function showView(viewName) {
         dashboardContainer.classList.add('hidden');
         logsContainer.classList.add('hidden');
@@ -40,15 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
             fetchAndRenderKategori();
         }
     }
-    function showLoginView() {
-        loginContainer.classList.remove('hidden');
-        appContainer.classList.add('hidden');
-    }
-    function showAppView() {
-        loginContainer.classList.add('hidden');
-        appContainer.classList.remove('hidden');
-        showView('dashboard');
-    }
+    function showLoginView() { loginContainer.classList.remove('hidden'); appContainer.classList.add('hidden'); }
+    function showAppView() { loginContainer.classList.add('hidden'); appContainer.classList.remove('hidden'); showView('dashboard'); }
 
     // --- FUNGSI LOGIKA (AUTH & LOGS) ---
     async function populateLogUserFilter() {
@@ -80,36 +71,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     }
 
-    // FUNGSI LOGIN DIPERBARUI
+    // --- FUNGSI OTENTIKASI (PENTING) ---
     async function handleLogin(e) {
         e.preventDefault();
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         errorMessage.textContent = '';
-        
-        // Cukup panggil fungsi sign in, jangan panggil showAppView() di sini.
-        // Biarkan onAuthStateChange yang menanganinya.
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-        if (error) {
-            errorMessage.textContent = 'Login Gagal: ' + error.message;
-        }
+        if (error) { errorMessage.textContent = 'Login Gagal: ' + error.message; }
+        // Biarkan onAuthStateChange yang menangani UI
     }
-
-    // FUNGSI LOGOUT DIPERBARUI
     async function handleLogout() {
         await supabase.auth.signOut();
-        // UI akan otomatis diperbarui oleh onAuthStateChange
+        // Biarkan onAuthStateChange yang menangani UI
     }
 
-    // --- INI ADALAH BAGIAN KUNCI PERBAIKANNYA ---
-    // Hapus fungsi checkSession() dan ganti dengan listener ini.
+    // --- LISTENER OTENTIKASI (SANGAT PENTING) ---
     supabase.auth.onAuthStateChange((event, session) => {
         if (session) {
-            // Jika ada sesi (setelah login atau saat refresh halaman)
             showAppView();
         } else {
-            // Jika tidak ada sesi (setelah logout atau belum login)
             showLoginView();
         }
     });
@@ -122,5 +103,4 @@ document.addEventListener('DOMContentLoaded', () => {
     navLogsButton.addEventListener('click', () => showView('logs'));
     navKategoriButton.addEventListener('click', () => showView('kategori'));
     logUserFilter.addEventListener('change', fetchLogs);
-
 });
