@@ -49,12 +49,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Mengambil daftar user dan mengatur default
     async function populateAndSetUserFilter() {
-        if (userFilter.options.length > 1) return; // Jangan isi ulang jika sudah ada
+        if (userFilter.options.length > 1) {
+            // Cukup set nilainya dari localStorage
+            const defaultUserId = localStorage.getItem('defaultUserId') || '006d7ce0-335d-41d1-a0e8-7dc93ee58eaa';
+            userFilter.value = defaultUserId;
+            return;
+        }
         const { data, error } = await supabase.from('users').select('id, nama').order('nama');
         if (error) { console.error('Gagal mengambil data user:', error); return; }
-
         userFilter.innerHTML = '<option value="semua">Semua User</option>';
         data.forEach(user => {
             const option = document.createElement('option');
@@ -62,9 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
             option.textContent = user.nama;
             userFilter.appendChild(option);
         });
-
-        // BARU: Set nilai default untuk filter
-        userFilter.value = "006d7ce0-335d-41d1-a0e8-7dc93ee58eaa";
+        
+        // Mengambil dari localStorage atau menggunakan fallback
+        const defaultUserId = localStorage.getItem('defaultUserId') || '006d7ce0-335d-41d1-a0e8-7dc93ee58eaa';
+        userFilter.value = defaultUserId;
         periodFilter.value = "hari_ini";
     }
 

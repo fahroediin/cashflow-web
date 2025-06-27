@@ -73,6 +73,30 @@
                 </div>
             </div>
 
+            <!-- Konten Manajemen Transaksi (BARU) -->
+            <div id="transaksi-container" class="hidden">
+                <div class="page-header">
+                    <h2>Manajemen Transaksi</h2>
+                    <div class="dashboard-filters">
+                        <select id="transaksi-user-filter"></select>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Kategori</th>
+                                <th>Tipe</th>
+                                <th>Nominal</th>
+                                <th>Catatan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transaksi-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- Konten Log -->
             <div id="logs-container" class="hidden">
                  <div class="page-header">
@@ -121,6 +145,28 @@
         </main>
     </div>
 
+    <!-- Konten Manajemen Pengguna (BARU) -->
+    <div id="pengguna-container" class="hidden">
+    <div class="page-header">
+        <h2>Manajemen Pengguna</h2>
+            </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nama</th>
+                                <th>Nomor WhatsApp</th>
+                                <th>Dibuat Tanggal</th>
+                                <th class="actions-column">Jadikan Default Filter</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pengguna-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
     <!-- Form Login -->
     <div id="login-container">
         <form id="login-form">
@@ -159,9 +205,11 @@
     </div>
 
     <!-- Pastikan urutan file JS benar -->
-    <script src="js/app.js"></script>
     <script src="js/config.js"></script>
-    <script src="js/dashboard.js"></script>
     <script src="js/kategori.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/transaksi.js"></script>
+    <script src="js/pengguna.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>
