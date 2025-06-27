@@ -70,7 +70,29 @@ function closeModal() {
     modal.classList.add('hidden');
 }
 
-// --- FUNGSI CRUD YANG DIPERBARUI ---
+// Fungsi untuk menampilkan pesan error yang lebih baik
+function showFriendlyError(error, action) {
+    console.error(`Error during ${action}:`, error); // Simpan error teknis di console untuk developer
+    let friendlyMessage = `Terjadi kesalahan saat ${action}.`;
+
+    if (error && error.message) {
+        const message = error.message.toLowerCase();
+        // Terjemahkan error Foreign Key
+        if (message.includes('violates foreign key constraint')) {
+            friendlyMessage = `Gagal! Kategori ini tidak dapat dihapus karena masih digunakan oleh data transaksi.`;
+        }
+        // Terjemahkan error duplikat
+        else if (message.includes('duplicate key value violates unique constraint')) {
+            friendlyMessage = 'Gagal! Nama kategori tersebut sudah ada. Silakan gunakan nama lain.';
+        }
+        // Terjemahkan error RLS
+        else if (message.includes('new row violates row-level security policy')) {
+             friendlyMessage = 'Aksi ditolak. Anda tidak memiliki izin untuk melakukan ini.';
+        }
+    }
+    Swal.fire('Gagal!', friendlyMessage, 'error');
+}
+
 
 async function handleFormSubmit(event) {
     event.preventDefault();
@@ -83,7 +105,6 @@ async function handleFormSubmit(event) {
         Swal.fire('Validasi Gagal', 'Semua field harus diisi.', 'warning');
         return;
     }
-
     saveButton.disabled = true;
     saveButton.textContent = 'Menyimpan...';
 
@@ -95,23 +116,17 @@ async function handleFormSubmit(event) {
     saveButton.textContent = id ? 'Update' : 'Simpan';
     
     if (error) {
-        Swal.fire('Gagal!', 'Terjadi kesalahan saat menyimpan data: ' + error.message, 'error');
+        showFriendlyError(error, 'menyimpan data');
     } else {
         closeModal();
-        Swal.fire({
-            icon: 'success',
-            title: 'Berhasil!',
-            text: 'Data kategori berhasil disimpan.',
-            showConfirmButton: false,
-            timer: 1500
-        });
+        Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Data kategori berhasil disimpan.', showConfirmButton: false, timer: 1500 });
         fetchAndRenderKategori();
     }
 }
 
+
 async function handleDeleteClick(id) {
-    // 1. Tampilkan konfirmasi dengan SweetAlert
-    Swal.fire({
+    const result = await Swal.fire({
         title: 'Anda yakin?',
         text: "Anda tidak akan dapat mengembalikan data ini!",
         icon: 'warning',
@@ -120,44 +135,42 @@ async function handleDeleteClick(id) {
         cancelButtonColor: '#d33',
         confirmButtonText: 'Ya, hapus!',
         cancelButtonText: 'Batal'
-    }).then(async (result) => {
-        if (result.isConfirmed) {
-            // 2. Jika dikonfirmasi, cek dulu apakah kategori sedang digunakan
-            const { count, error: checkError } = await supabase
-                .from('transaksi')
-                .select('*', { count: 'exact', head: true }) // hanya hitung, tidak ambil data
-                .eq('id_kategori', id);
-
-            if (checkError) {
-                Swal.fire('Gagal!', 'Gagal memeriksa penggunaan kategori: ' + checkError.message, 'error');
-                return;
-            }
-
-            // 3. Jika sedang digunakan (count > 0), tampilkan error dan stop
-            if (count > 0) {
-                Swal.fire('Gagal Dihapus!', 'Kategori ini sedang digunakan oleh ' + count + ' transaksi dan tidak dapat dihapus.', 'error');
-                return;
-            }
-
-            // 4. Jika tidak digunakan, lanjutkan proses hapus
-            const { error: deleteError } = await supabase
-                .from('kategori')
-                .delete()
-                .eq('id', id);
-
-            if (deleteError) {
-                Swal.fire('Gagal!', 'Gagal menghapus data: ' + deleteError.message, 'error');
-            } else {
-                Swal.fire(
-                    'Dihapus!',
-                    'Kategori telah berhasil dihapus.',
-                    'success'
-                );
-                fetchAndRenderKategori();
-            }
-        }
     });
+
+    if (result.isConfirmed) {
+        // Cek dulu apakah kategori sedang digunakan (best-effort di sisi client)
+        const { count, error: checkError } = await supabase
+            .from('transaksi')
+            .select('*', { count: 'exact', head: true })
+            .eq('id_kategori', id);
+
+        if (checkError) {
+            // Jika error saat mengecek (kemungkinan karena RLS di tabel transaksi),
+            // kita tetap coba hapus, tapi biarkan database yang memutuskan.
+            console.warn('Could not check usage, proceeding with delete attempt. Error:', checkError.message);
+        }
+
+        // Jika pengecekan berhasil dan count > 0
+        if (count > 0) {
+            Swal.fire('Gagal Dihapus!', `Kategori ini sedang digunakan oleh ${count} transaksi dan tidak dapat dihapus.`, 'error');
+            return;
+        }
+
+        // Jika tidak digunakan (atau pengecekan gagal), lanjutkan proses hapus
+        const { error: deleteError } = await supabase
+            .from('kategori')
+            .delete()
+            .eq('id', id);
+
+        if (deleteError) {
+            showFriendlyError(deleteError, 'menghapus data');
+        } else {
+            Swal.fire('Dihapus!', 'Kategori telah berhasil dihapus.', 'success');
+            fetchAndRenderKategori();
+        }
+    }
 }
+
 
 // --- EVENT LISTENERS --- (Tidak ada perubahan di sini)
 addKategoriButton.addEventListener('click', () => openModal('add'));
