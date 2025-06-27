@@ -128,8 +128,8 @@
                             <tr>
                                 <th>Nama</th>
                                 <th>Nomor WhatsApp</th>
-                                <th>Akun Login Web</th> <!-- Kolom diubah -->
-                                <th class="actions-column">Aksi</th>
+                                <th>Dibuat Tanggal</th>
+                                <th class="actions-column">Jadikan Default Filter</th>
                             </tr>
                         </thead>
                         <tbody id="pengguna-tbody"></tbody>
@@ -137,6 +137,75 @@
                 </div>
             </div>
         </main>
+    </div>
+
+
+            <!-- Konten Log -->
+            <div id="logs-container" class="hidden">
+                 <div class="page-header">
+                    <h2>Log Aktivitas Terbaru</h2>
+                    <!-- Filter User untuk Log -->
+                    <div class="dashboard-filters">
+                         <select id="log-user-filter"></select>
+                    </div>
+                 </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Waktu</th>
+                                <th>Nomor WA</th>
+                                <th>Aktivitas</th>
+                                <th>Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Konten Manajemen Kategori -->
+            <div id="kategori-container" class="hidden">
+                 <div class="page-header">
+                    <h2>Manajemen Kategori</h2>
+                    <button id="add-kategori-button" class="btn-primary">Tambah Kategori</button>
+                 </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nama Kategori</th>
+                                <th>Tipe</th>
+                                <th class="actions-column">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="kategori-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Konten Manajemen Pengguna -->
+    <div id="pengguna-container" class="hidden">
+        <div class="page-header">
+            <h2>Manajemen Pengguna</h2>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nama</th>
+                        <th>Nomor WhatsApp</th>
+                        <th>Dibuat Tanggal</th>
+                        <th class="actions-column">Aksi</th> 
+                    </tr>
+                </thead>
+                <tbody id="pengguna-tbody"></tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Form Login -->
@@ -150,29 +219,51 @@
         </form>
     </div>
 
+    <!-- Modal untuk Buat Akun Login Pengguna (BARU) -->
+    <div id="create-login-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 id="create-login-modal-title">Buat Akun Login untuk Pengguna</h3>
+            <form id="create-login-form">
+                <input type="hidden" id="chatbot-user-id">
+                <p>Anda akan membuat akun login untuk: <strong id="chatbot-user-name"></strong></p>
+                <div class="form-group">
+                    <label for="new-user-email">Email</label>
+                    <input type="email" id="new-user-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-user-password">Password</label>
+                    <input type="password" id="new-user-password" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="cancel-create-login-button" class="btn-secondary">Batal</button>
+                    <button type="submit" class="btn-primary">Buat Akun</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal untuk Form Tambah/Edit Kategori -->
     <div id="kategori-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <h3 id="modal-title">Tambah Kategori</h3>
             <form id="kategori-form">
                 <input type="hidden" id="kategori-id">
-                <div class="form-group"><label for="nama-kategori">Nama Kategori</label><input type="text" id="nama-kategori" required></div>
-                <div class="form-group"><label for="tipe-kategori">Tipe</label><select id="tipe-kategori" required><option value="" disabled selected>Pilih Tipe</option><option value="INCOME">INCOME</option><option value="EXPENSE">EXPENSE</option></select></div>
-                <div class="form-actions"><button type="button" id="cancel-button" class="btn-secondary">Batal</button><button type="submit" id="save-button" class="btn-primary">Simpan</button></div>
-            </form>
-        </div>
-    </div>
-    
-    <!-- Modal untuk Buat Akun Login Pengguna (BARU) -->
-    <div id="create-login-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <h3 id="create-login-modal-title">Buat Akun Login Web</h3>
-            <form id="create-login-form">
-                <input type="hidden" id="chatbot-user-id">
-                <p>Anda akan membuat akun login untuk pengguna: <strong id="chatbot-user-name"></strong></p>
-                <div class="form-group"><label for="new-user-email">Email</label><input type="email" id="new-user-email" required autocomplete="off"></div>
-                <div class="form-group"><label for="new-user-password">Password</label><input type="password" id="new-user-password" required autocomplete="new-password"></div>
-                <div class="form-actions"><button type="button" id="cancel-create-login-button" class="btn-secondary">Batal</button><button type="submit" class="btn-primary">Buat Akun</button></div>
+                <div class="form-group">
+                    <label for="nama-kategori">Nama Kategori</label>
+                    <input type="text" id="nama-kategori" required>
+                </div>
+                <div class="form-group">
+                    <label for="tipe-kategori">Tipe</label>
+                    <select id="tipe-kategori" required>
+                        <option value="" disabled selected>Pilih Tipe</option>
+                        <option value="INCOME">INCOME</option>
+                        <option value="EXPENSE">EXPENSE</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="cancel-button" class="btn-secondary">Batal</button>
+                    <button type="submit" id="save-button" class="btn-primary">Simpan</button>
+                </div>
             </form>
         </div>
     </div>
