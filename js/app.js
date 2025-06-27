@@ -1,4 +1,4 @@
-// js/app.js (Versi Perbaikan)
+// js/app.js
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- ELEMEN DOM UTAMA & NAVIGASI ---
@@ -81,34 +81,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         errorMessage.textContent = '';
-        
-        // Panggil signInWithPassword, tapi jangan lakukan apa-apa di 'else'
-        // Biarkan onAuthStateChange yang menangani UI
         const { error } = await supabase.auth.signInWithPassword({ email, password });
 
         if (error) {
             errorMessage.textContent = 'Login Gagal: ' + error.message;
+        } else {
+            showAppView();
         }
     }
 
     async function handleLogout() {
         await supabase.auth.signOut();
-        // UI akan otomatis diperbarui oleh onAuthStateChange
+        showLoginView();
     }
 
-    // --- PERUBAHAN UTAMA: GUNAKAN onAuthStateChange ---
-    // Listener ini akan menangani semua perubahan status login/logout secara otomatis
-    // dan juga menggantikan fungsi checkSession()
-    supabase.auth.onAuthStateChange((event, session) => {
-        console.log('Auth event:', event, 'Session:', session); // Baris ini bagus untuk debugging
-        if (event === 'SIGNED_IN' || (event === 'INITIAL_SESSION' && session)) {
-            // Jika user login atau sudah punya sesi saat halaman dimuat
+    async function checkSession() {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
             showAppView();
-        } else if (event === 'SIGNED_OUT') {
-            // Jika user logout
+        } else {
             showLoginView();
         }
-    });
+    }
 
     // --- EVENT LISTENERS ---
     loginForm.addEventListener('submit', handleLogin);
@@ -117,5 +111,5 @@ document.addEventListener('DOMContentLoaded', () => {
     navKategoriButton.addEventListener('click', () => showView('kategori'));
 
     // --- INISIALISASI APLIKASI ---
-    // checkSession(); // <<< FUNGSI INI TIDAK DIPERLUKAN LAGI, sudah digantikan onAuthStateChange
+    checkSession();
 });
