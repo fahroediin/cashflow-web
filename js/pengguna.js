@@ -26,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- FUNGSI BARU UNTUK HAPUS PENGGUNA ---
     async function deleteUser(userId, userName) {
-        // Konfirmasi dengan SweetAlert
         const result = await Swal.fire({
             title: 'Anda yakin?',
             text: `Anda akan menghapus pengguna "${userName}". Aksi ini tidak dapat dibatalkan!`,
@@ -39,25 +38,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (result.isConfirmed) {
-            // Panggil RPC (Remote Procedure Call) untuk menghapus user
-            // Ini adalah cara yang direkomendasikan Supabase untuk menghapus user
-            const { error } = await supabase.rpc('delete_user_by_id', { user_id: userId });
+            // Panggil RPC yang telah diperbarui
+            const { data, error } = await supabase.rpc('delete_user_by_id', { user_id_to_delete: userId });
 
             if (error) {
                 console.error('Gagal menghapus pengguna:', error);
+                // Pesan error dari RAISE EXCEPTION akan ada di sini
                 Swal.fire(
                     'Gagal!',
-                    `Terjadi kesalahan saat menghapus pengguna: ${error.message}`,
+                    `Terjadi kesalahan: ${error.message}`,
                     'error'
                 );
             } else {
+                // Tampilkan pesan sukses dari return value fungsi
                 Swal.fire(
-                    'Dihapus!',
-                    `Pengguna "${userName}" telah berhasil dihapus.`,
+                    'Berhasil!',
+                    data, // 'data' akan berisi "Pengguna berhasil dihapus."
                     'success'
                 );
-                // Muat ulang daftar pengguna
-                fetchAndRenderPengguna(); 
+                fetchAndRenderPengguna();
             }
         }
     }
