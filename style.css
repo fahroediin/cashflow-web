@@ -4,7 +4,9 @@
     --card-color: #1e1e1e;
     --text-color: #e0e0e0;
     --primary-color: #075E54;
+    --secondary-color: #555;
     --border-color: #333;
+    --danger-color: #b91c1c;
 }
 
 body {
@@ -16,6 +18,11 @@ body {
     line-height: 1.6;
 }
 
+.hidden {
+    display: none !important;
+}
+
+/* === HEADER & NAVIGASI === */
 header {
     display: flex;
     justify-content: space-between;
@@ -23,155 +30,112 @@ header {
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 10px;
     margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
 }
-
-h1, h2 {
-    color: var(--text-color);
+h1 { margin: 0; }
+nav { display: flex; gap: 10px; flex-grow: 1; }
+.nav-button {
+    background-color: transparent; border: 1px solid var(--border-color);
+    color: var(--text-color); padding: 8px 16px; border-radius: 20px;
+    cursor: pointer; transition: all 0.2s;
 }
-
-.hidden {
-    display: none !important;
+.nav-button:hover { background-color: var(--card-color); border-color: #555; }
+.nav-button.active {
+    background-color: var(--primary-color); border-color: var(--primary-color);
+    color: white; font-weight: bold;
 }
+#logout-button { background-color: var(--secondary-color); }
+#logout-button:hover { background-color: #777; }
 
-/* Form Login */
+/* === KONTEN UTAMA & JUDUL HALAMAN === */
+main h2 { margin-top: 0; }
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.page-header h2 { margin: 0; }
+
+/* === FORM LOGIN === */
 #login-container {
-    max-width: 400px;
-    margin: 50px auto;
-    padding: 30px;
-    background-color: var(--card-color);
-    border-radius: 8px;
+    max-width: 400px; margin: 50px auto; padding: 30px;
+    background-color: var(--card-color); border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
-
-#login-form {
-    display: flex;
-    flex-direction: column;
-}
-
-#login-form h2 {
-    text-align: center;
-    margin-top: 0;
-}
-
+#login-form { display: flex; flex-direction: column; }
+#login-form h2 { text-align: center; margin: 0 0 25px 0; }
 #login-form input {
-    background-color: #333;
-    border: 1px solid #444;
-    color: var(--text-color);
-    padding: 12px;
-    margin-bottom: 15px;
-    border-radius: 4px;
-    font-size: 16px;
+    background-color: #333; border: 1px solid #444; color: var(--text-color);
+    padding: 12px; margin-bottom: 15px; border-radius: 4px; font-size: 16px;
 }
-
-button {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 12px 15px;
-    border-radius: 4px;
-    font-size: 16px;
-    cursor: pointer;
+button[type="submit"] {
+    background-color: var(--primary-color); color: white; border: none;
+    padding: 12px 15px; border-radius: 4px; font-size: 16px; cursor: pointer;
     transition: background-color 0.2s;
 }
+button[type="submit"]:hover { background-color: #128C7E; }
+.error-text { color: #ff5c5c; text-align: center; min-height: 20px; }
 
-button:hover {
-    background-color: #128C7E;
-}
-
-.error-text {
-    color: #ff5c5c;
-    text-align: center;
-    min-height: 20px;
-}
-
-/* Tabel Log (Desktop View) */
+/* === TABEL === */
 .table-wrapper {
-    overflow-x: auto;
-    background-color: var(--card-color);
-    border-radius: 8px;
-    padding: 10px;
+    overflow-x: auto; background-color: var(--card-color);
+    border-radius: 8px; padding: 10px;
 }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+thead th { background-color: #2a2a2a; font-weight: 600; }
+tbody tr:hover { background-color: #2c2c2c; }
+td:first-child { white-space: nowrap; }
+.actions-column { width: 1%; white-space: nowrap; }
+.action-buttons { display: flex; gap: 8px; }
+.action-buttons button { font-size: 14px; padding: 6px 12px; border-radius: 4px; }
+.btn-edit { background-color: #0ea5e9; } .btn-edit:hover { background-color: #38bdf8; }
+.btn-delete { background-color: var(--danger-color); } .btn-delete:hover { background-color: #dc2626; }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
+/* === MODAL FORM === */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.7); display: flex;
+    justify-content: center; align-items: center; z-index: 1000;
 }
-
-th, td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
+.modal-content {
+    background-color: var(--card-color); padding: 30px; border-radius: 8px;
+    width: 90%; max-width: 450px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
-
-thead th {
-    background-color: #2a2a2a;
-    font-weight: 600;
+.modal-content h3 { margin-top: 0; margin-bottom: 25px; text-align: center; }
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; margin-bottom: 8px; color: #ccc; font-size: 14px; }
+.form-group input, .form-group select {
+    width: 100%; padding: 10px; background-color: #333;
+    border: 1px solid #444; color: var(--text-color); border-radius: 4px;
+    font-size: 16px; box-sizing: border-box;
 }
+.form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 30px; }
+.btn-primary { background-color: var(--primary-color); } .btn-primary:hover { background-color: #128C7E; }
+.btn-secondary { background-color: var(--secondary-color); color: white; border: none; padding: 10px 15px; }
+.btn-secondary:hover { background-color: #777; }
 
-tbody tr:hover {
-    background-color: #2c2c2c;
-}
-
-/* --- PERBAIKAN DESKTOP: Mencegah kolom Waktu terpotong --- */
-td:first-child {
-    white-space: nowrap;
-}
-
-
-/* --- PERBAIKAN MOBILE: Tampilan Responsif dengan Flexbox --- */
+/* === RESPONSIVE === */
 @media screen and (max-width: 768px) {
-    .table-wrapper {
-        background-color: transparent;
-        padding: 0;
-        border-radius: 0;
-    }
-
-    table {
-        border: 0;
-    }
-
-    thead {
-        display: none; /* Sembunyikan header tabel di mobile */
-    }
-
+    body { padding: 10px; }
+    .table-wrapper { background-color: transparent; padding: 0; border-radius: 0; }
+    table, thead, tbody, th, td, tr { display: block; }
+    thead { display: none; }
     tr {
-        display: block;
-        margin-bottom: 1rem;
-        border-radius: 8px;
-        background-color: var(--card-color);
-        border: 1px solid var(--border-color);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        padding: 0.5rem; /* Beri sedikit padding di dalam kartu */
+        margin-bottom: 1rem; border-radius: 8px; background-color: var(--card-color);
+        border: 1px solid var(--border-color); padding: 0.5rem;
     }
-    
     td {
-        display: flex; /* Gunakan flexbox untuk layout */
-        justify-content: space-between; /* Dorong label ke kiri, data ke kanan */
-        align-items: flex-start; /* Rata atas jika teks data panjang */
-        text-align: right; /* Data rata kanan di dalam span */
-        font-size: 14px;
-        padding: 10px;
+        display: flex; justify-content: space-between; align-items: center;
+        text-align: right; font-size: 14px; padding: 10px;
         border-bottom: 1px dotted #3a3a3a;
     }
-
-    tr td:last-child {
-        border-bottom: 0;
-    }
-
-    /* Label dari atribut data-label */
+    tr td:last-child { border-bottom: 0; }
     td::before {
-        content: attr(data-label);
-        font-weight: bold;
-        color: #aaa;
-        text-transform: uppercase;
-        font-size: 12px;
-        text-align: left; /* Label rata kiri */
-        margin-right: 15px; /* Jarak antara label dan data */
-        flex-shrink: 0; /* Mencegah label menyusut */
+        content: attr(data-label); font-weight: bold; color: #aaa; text-transform: uppercase;
+        font-size: 12px; text-align: left; margin-right: 15px; flex-shrink: 0;
     }
-
-    /* Span yang membungkus data */
-    td span {
-        word-break: break-all; /* Agar teks panjang bisa pindah baris */
-    }
+    td span, td .action-buttons { word-break: break-all; }
 }
