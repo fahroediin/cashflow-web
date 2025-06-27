@@ -8,7 +8,6 @@
     <!-- Impor Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Impor Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -40,33 +39,49 @@
                     </div>
                 </div>
 
-                <!-- KPI Cards -->
-                <div class="kpi-cards">
-                    <div class="kpi-card">
-                        <h3>💰 Total Pemasukan</h3>
-                        <p id="total-pemasukan">Rp 0</p>
-                    </div>
-                    <div class="kpi-card">
-                        <h3>📉 Total Pengeluaran</h3>
-                        <p id="total-pengeluaran">Rp 0</p>
-                    </div>
-                    <div class="kpi-card">
-                        <h3>💵 Saldo Akhir</h3>
-                        <p id="saldo-akhir">Rp 0</p>
+                <!-- Tombol Toggle View Dashboard -->
+                <div class="view-toggle">
+                    <button id="kpi-view-btn" class="view-toggle-btn active">Tampilan Kartu</button>
+                    <button id="chart-view-btn" class="view-toggle-btn">Tampilan Chart</button>
+                </div>
+
+                <!-- Container untuk KPI Cards -->
+                <div id="kpi-view-container">
+                    <div class="kpi-cards">
+                        <div class="kpi-card">
+                            <h3>💰 Total Pemasukan</h3>
+                            <p id="total-pemasukan">Rp 0</p>
+                        </div>
+                        <div class="kpi-card">
+                            <h3>📉 Total Pengeluaran</h3>
+                            <p id="total-pengeluaran">Rp 0</p>
+                        </div>
+                        <div class="kpi-card">
+                            <h3>💵 Saldo Akhir</h3>
+                            <p id="saldo-akhir">Rp 0</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Chart Container -->
-                <div class="chart-container">
-                    <h3>Rincian Pengeluaran per Kategori</h3>
-                    <canvas id="expense-chart"></canvas>
-                    <p id="chart-no-data" class="hidden">Tidak ada data pengeluaran untuk ditampilkan.</p>
+                <!-- Container untuk Chart -->
+                <div id="chart-view-container" class="hidden">
+                    <div class="chart-container">
+                        <h3>Rincian Pengeluaran per Kategori</h3>
+                        <canvas id="expense-chart"></canvas>
+                        <p id="chart-no-data" class="hidden">Tidak ada data pengeluaran untuk ditampilkan.</p>
+                    </div>
                 </div>
             </div>
 
             <!-- Konten Log -->
             <div id="logs-container" class="hidden">
-                <h2>Log Aktivitas Terbaru</h2>
+                 <div class="page-header">
+                    <h2>Log Aktivitas Terbaru</h2>
+                    <!-- Filter User untuk Log -->
+                    <div class="dashboard-filters">
+                         <select id="log-user-filter"></select>
+                    </div>
+                 </div>
                 <div class="table-wrapper">
                     <table>
                         <thead>
@@ -144,9 +159,9 @@
     </div>
 
     <!-- Pastikan urutan file JS benar -->
-    <script src="js/config.js"></script>
-    <script src="js/kategori.js"></script>
-    <script src="js/dashboard.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/kategori.js"></script>
 </body>
 </html>
