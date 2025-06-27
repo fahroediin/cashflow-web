@@ -84,52 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return session.user.app_metadata.user_role === 'admin';
     }
 
-    function openCreateLoginModal(userId, userName) {
-        chatbotUserIdInput.value = userId;
-        chatbotUserNameEl.textContent = userName;
-        createLoginModal.classList.remove('hidden');
-    }
-
-    function closeCreateLoginModal() {
-        createLoginForm.reset();
-        createLoginModal.classList.add('hidden');
-    }
-
-    async function handleCreateLoginSubmit(event) {
-        event.preventDefault();
-        const email = document.getElementById('new-user-email').value;
-        const password = document.getElementById('new-user-password').value;
-        const publicUserId = chatbotUserIdInput.value;
-
-        // 1. Buat pengguna baru di sistem Otentikasi Supabase
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-            email: email,
-            password: password,
-        });
-
-        if (authError) {
-            Swal.fire('Gagal!', `Gagal membuat akun login: ${authError.message}`, 'error');
-            return;
-        }
-
-        if (authData.user) {
-            // 2. Jika berhasil, hubungkan auth_user_id ke public.users
-            const { error: updateError } = await supabase
-                .from('users')
-                .update({ auth_user_id: authData.user.id })
-                .eq('id', publicUserId);
-
-            if (updateError) {
-                Swal.fire('Berhasil Sebagian', `Akun login berhasil dibuat, tetapi gagal menautkan ke profil chatbot: ${updateError.message}`, 'warning');
-            } else {
-                Swal.fire('Berhasil!', 'Akun login untuk pengguna berhasil dibuat dan ditautkan.', 'success');
-                closeCreateLoginModal();
-                fetchAndRenderPengguna(); // Muat ulang tabel untuk update tampilan
-            }
-        }
-    }
-
-
     async function fetchAndRenderPengguna() {
         penggunaTbody.innerHTML = '<tr><td colspan="4">Memuat data...</td></tr>';
         const isAdmin = await checkAdminRole();

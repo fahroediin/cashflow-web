@@ -1,5 +1,7 @@
-// js/dashboard.js (Versi dengan localStorage)
+// js/dashboard.js (Versi Revisi Final)
+
 document.addEventListener('DOMContentLoaded', () => {
+    // --- ELEMEN DOM DASHBOARD ---
     const userFilter = document.getElementById('user-filter');
     const periodFilter = document.getElementById('period-filter');
     const totalPemasukanEl = document.getElementById('total-pemasukan');
@@ -7,12 +9,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const saldoAkhirEl = document.getElementById('saldo-akhir');
     const expenseChartCanvas = document.getElementById('expense-chart');
     const chartNoDataEl = document.getElementById('chart-no-data');
+
+    // Elemen baru untuk toggle view
     const kpiViewBtn = document.getElementById('kpi-view-btn');
     const chartViewBtn = document.getElementById('chart-view-btn');
     const kpiViewContainer = document.getElementById('kpi-view-container');
     const chartViewContainer = document.getElementById('chart-view-container');
-    let expenseChart;
 
+    let expenseChart; 
+
+    // --- FUNGSI HELPER ---
     function formatCurrency(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value); }
     function getPeriodDates(period) {
         const now = new Date();
@@ -25,17 +31,27 @@ document.addEventListener('DOMContentLoaded', () => {
         return { startDate, endDate };
     }
 
+    // --- FUNGSI UTAMA ---
+
+    // Fungsi baru untuk mengatur tampilan dashboard
     function showDashboardView(view) {
         kpiViewBtn.classList.remove('active');
         chartViewBtn.classList.remove('active');
         kpiViewContainer.classList.add('hidden');
         chartViewContainer.classList.add('hidden');
-        if (view === 'kpi') { kpiViewBtn.classList.add('active'); kpiViewContainer.classList.remove('hidden'); } 
-        else if (view === 'chart') { chartViewBtn.classList.add('active'); chartViewContainer.classList.remove('hidden'); }
+
+        if (view === 'kpi') {
+            kpiViewBtn.classList.add('active');
+            kpiViewContainer.classList.remove('hidden');
+        } else if (view === 'chart') {
+            chartViewBtn.classList.add('active');
+            chartViewContainer.classList.remove('hidden');
+        }
     }
 
     async function populateAndSetUserFilter() {
         if (userFilter.options.length > 1) {
+            // Cukup set nilainya dari localStorage
             const defaultUserId = localStorage.getItem('defaultUserId') || '006d7ce0-335d-41d1-a0e8-7dc93ee58eaa';
             userFilter.value = defaultUserId;
             return;
@@ -49,6 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
             option.textContent = user.nama;
             userFilter.appendChild(option);
         });
+        
+        // Mengambil dari localStorage atau menggunakan fallback
         const defaultUserId = localStorage.getItem('defaultUserId') || '006d7ce0-335d-41d1-a0e8-7dc93ee58eaa';
         userFilter.value = defaultUserId;
         periodFilter.value = "hari_ini";
@@ -58,19 +76,24 @@ document.addEventListener('DOMContentLoaded', () => {
         totalPemasukanEl.textContent = 'Memuat...';
         totalPengeluaranEl.textContent = 'Memuat...';
         saldoAkhirEl.textContent = 'Memuat...';
+        
         const selectedUserId = userFilter.value;
         const selectedPeriod = periodFilter.value;
         const { startDate, endDate } = getPeriodDates(selectedPeriod);
+
         let query = supabase.from('transaksi').select('nominal, kategori(nama_kategori, tipe)').gte('tanggal', startDate.toISOString()).lte('tanggal', endDate.toISOString());
         if (selectedUserId && selectedUserId !== 'semua') { query = query.eq('id_user', selectedUserId); }
         const { data, error } = await query;
+
         if (error) { console.error('Gagal mengambil data transaksi:', error); totalPemasukanEl.textContent = 'Error'; return; }
+
         let totalIncome = 0, totalExpense = 0;
         const expenseByCategory = {};
         data.forEach(tx => {
             if (tx.kategori && tx.kategori.tipe === 'INCOME') { totalIncome += tx.nominal; } 
             else if (tx.kategori && tx.kategori.tipe === 'EXPENSE') { totalExpense += tx.nominal; const categoryName = tx.kategori.nama_kategori; expenseByCategory[categoryName] = (expenseByCategory[categoryName] || 0) + tx.nominal; }
         });
+
         totalPemasukanEl.textContent = formatCurrency(totalIncome);
         totalPengeluaranEl.textContent = formatCurrency(totalExpense);
         saldoAkhirEl.textContent = formatCurrency(totalIncome - totalExpense);
@@ -81,9 +104,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (expenseChart) { expenseChart.destroy(); }
         const labels = Object.keys(data);
         const values = Object.values(data);
-        if (labels.length === 0) { expenseChartCanvas.style.display = 'none'; chartNoDataEl.classList.remove('hidden'); return; }
+        
+        if (labels.length === 0) {
+            expenseChartCanvas.style.display = 'none';
+            chartNoDataEl.classList.remove('hidden');
+            return;
+        }
         expenseChartCanvas.style.display = 'block';
         chartNoDataEl.classList.add('hidden');
+
         const ctx = expenseChartCanvas.getContext('2d');
         expenseChart = new Chart(ctx, {
             type: 'pie',
@@ -93,9 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.initializeDashboard = async () => {
-        showDashboardView('kpi');
-        await populateAndSetUserFilter();
-        await updateDashboard();
+        showDashboardView('kpi'); // Set tampilan default ke KPI
+        await populateAndSetUserFilter(); // Isi filter dan set default
+        await updateDashboard(); // Baru update dashboard setelah filter siap
     };
 
     userFilter.addEventListener('change', updateDashboard);

@@ -79,20 +79,6 @@ td:first-child { white-space: nowrap; }
 .btn-secondary { background-color: var(--secondary-color); color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
 .btn-secondary:hover { background-color: var(--secondary-color-hover); }
 
-/* Style untuk tombol Buat Akun */
-.btn-create-login {
-    background-color: #22c55e; /* Warna hijau */
-    padding: 6px 12px;
-    font-size: 14px;
-    border: none;
-    color: white;
-    cursor: pointer;
-    border-radius: 4px;
-}
-.btn-create-login:hover {
-    background-color: #16a34a;
-}
-
 /* === STYLE DASHBOARD === */
 .dashboard-filters { display: flex; gap: 15px; }
 .dashboard-filters select { background-color: #333; border: 1px solid #555; color: var(--text-color); padding: 8px 12px; border-radius: 4px; font-size: 14px; }
