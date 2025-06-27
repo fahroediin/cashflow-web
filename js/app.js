@@ -65,10 +65,14 @@ document.addEventListener('DOMContentLoaded', () => {
             ? '<tr><td colspan="4">Belum ada aktivitas.</td></tr>'
             : data.map(log => {
                 const timestamp = new Date(log.timestamp).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+            // Format nomor WA sebelum ditampilkan
+            const formattedWaNumber = log.user_wa_number 
+                ? log.user_wa_number.replace('@c.us', '') 
+                : '-';
                 return `
                     <tr>
                         <td data-label="Waktu"><span>${timestamp}</span></td>
-                        <td data-label="Nomor WA"><span>${log.user_wa_number || '-'}</span></td>
+                        <td data-label="Nomor WA"><span>${formattedWaNumber}</span></td>
                         <td data-label="Aktivitas"><span>${log.aktivitas}</span></td>
                         <td data-label="Detail"><span>${log.detail || '-'}</span></td>
                     </tr>
