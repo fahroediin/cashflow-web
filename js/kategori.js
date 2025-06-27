@@ -1,10 +1,8 @@
-// js/kategori.js
+// js/kategori.js (Versi dengan SweetAlert dan Pengecekan)
 
 // --- ELEMEN DOM ---
 const kategoriTbody = document.getElementById('kategori-tbody');
 const addKategoriButton = document.getElementById('add-kategori-button');
-
-// Elemen Modal
 const modal = document.getElementById('kategori-modal');
 const modalTitle = document.getElementById('modal-title');
 const kategoriForm = document.getElementById('kategori-form');
@@ -16,6 +14,7 @@ const cancelButton = document.getElementById('cancel-button');
 // --- FUNGSI-FUNGSI ---
 
 async function fetchAndRenderKategori() {
+    // ... (Fungsi ini tidak perlu diubah)
     kategoriTbody.innerHTML = '<tr><td colspan="3">Memuat data...</td></tr>';
     const { data, error } = await supabase
         .from('kategori')
@@ -27,12 +26,10 @@ async function fetchAndRenderKategori() {
         kategoriTbody.innerHTML = '<tr><td colspan="3" class="error-text">Gagal memuat data kategori.</td></tr>';
         return;
     }
-
     if (data.length === 0) {
         kategoriTbody.innerHTML = '<tr><td colspan="3">Belum ada kategori.</td></tr>';
         return;
     }
-
     kategoriTbody.innerHTML = '';
     data.forEach(kategori => {
         const tr = document.createElement('tr');
@@ -51,6 +48,7 @@ async function fetchAndRenderKategori() {
 }
 
 function openModal(mode, data = {}) {
+    // ... (Fungsi ini tidak perlu diubah)
     kategoriForm.reset();
     const saveButton = document.getElementById('save-button');
     if (mode === 'add') {
@@ -68,8 +66,11 @@ function openModal(mode, data = {}) {
 }
 
 function closeModal() {
+    // ... (Fungsi ini tidak perlu diubah)
     modal.classList.add('hidden');
 }
+
+// --- FUNGSI CRUD YANG DIPERBARUI ---
 
 async function handleFormSubmit(event) {
     event.preventDefault();
@@ -79,7 +80,7 @@ async function handleFormSubmit(event) {
     const tipe = tipeKategoriSelect.value;
 
     if (!nama_kategori || !tipe) {
-        alert('Semua field harus diisi.');
+        Swal.fire('Validasi Gagal', 'Semua field harus diisi.', 'warning');
         return;
     }
 
@@ -87,37 +88,84 @@ async function handleFormSubmit(event) {
     saveButton.textContent = 'Menyimpan...';
 
     const { error } = id
-        ? await supabase.from('kategori').update({ nama_kategori, tipe }).eq('id', id) // Edit
-        : await supabase.from('kategori').insert([{ nama_kategori, tipe }]); // Tambah
+        ? await supabase.from('kategori').update({ nama_kategori, tipe }).eq('id', id)
+        : await supabase.from('kategori').insert([{ nama_kategori, tipe }]);
 
     saveButton.disabled = false;
+    saveButton.textContent = id ? 'Update' : 'Simpan';
+    
     if (error) {
-        alert('Gagal menyimpan data: ' + error.message);
-        saveButton.textContent = id ? 'Update' : 'Simpan';
+        Swal.fire('Gagal!', 'Terjadi kesalahan saat menyimpan data: ' + error.message, 'error');
     } else {
         closeModal();
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: 'Data kategori berhasil disimpan.',
+            showConfirmButton: false,
+            timer: 1500
+        });
         fetchAndRenderKategori();
     }
 }
 
 async function handleDeleteClick(id) {
-    if (!confirm('Apakah Anda yakin ingin menghapus kategori ini?')) return;
-    const { error } = await supabase.from('kategori').delete().eq('id', id);
-    if (error) {
-        alert('Gagal menghapus data: ' + error.message);
-    } else {
-        fetchAndRenderKategori();
-    }
+    // 1. Tampilkan konfirmasi dengan SweetAlert
+    Swal.fire({
+        title: 'Anda yakin?',
+        text: "Anda tidak akan dapat mengembalikan data ini!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Ya, hapus!',
+        cancelButtonText: 'Batal'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            // 2. Jika dikonfirmasi, cek dulu apakah kategori sedang digunakan
+            const { count, error: checkError } = await supabase
+                .from('transaksi')
+                .select('*', { count: 'exact', head: true }) // hanya hitung, tidak ambil data
+                .eq('id_kategori', id);
+
+            if (checkError) {
+                Swal.fire('Gagal!', 'Gagal memeriksa penggunaan kategori: ' + checkError.message, 'error');
+                return;
+            }
+
+            // 3. Jika sedang digunakan (count > 0), tampilkan error dan stop
+            if (count > 0) {
+                Swal.fire('Gagal Dihapus!', 'Kategori ini sedang digunakan oleh ' + count + ' transaksi dan tidak dapat dihapus.', 'error');
+                return;
+            }
+
+            // 4. Jika tidak digunakan, lanjutkan proses hapus
+            const { error: deleteError } = await supabase
+                .from('kategori')
+                .delete()
+                .eq('id', id);
+
+            if (deleteError) {
+                Swal.fire('Gagal!', 'Gagal menghapus data: ' + deleteError.message, 'error');
+            } else {
+                Swal.fire(
+                    'Dihapus!',
+                    'Kategori telah berhasil dihapus.',
+                    'success'
+                );
+                fetchAndRenderKategori();
+            }
+        }
+    });
 }
 
-// --- EVENT LISTENERS ---
+// --- EVENT LISTENERS --- (Tidak ada perubahan di sini)
 addKategoriButton.addEventListener('click', () => openModal('add'));
 cancelButton.addEventListener('click', closeModal);
 modal.addEventListener('click', (event) => {
     if (event.target === modal) closeModal();
 });
 kategoriForm.addEventListener('submit', handleFormSubmit);
-
 kategoriTbody.addEventListener('click', (event) => {
     const target = event.target;
     if (target.classList.contains('btn-edit')) {
