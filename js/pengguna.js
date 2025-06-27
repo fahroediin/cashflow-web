@@ -1,4 +1,5 @@
-// js/manajemen_pengguna.js
+// js/pengguna.js (Versi Final yang Benar)
+
 document.addEventListener('DOMContentLoaded', () => {
     const penggunaTbody = document.getElementById('pengguna-tbody');
 
@@ -24,11 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
         updateDefaultButtons();
     }
 
-    // --- FUNGSI BARU UNTUK HAPUS PENGGUNA ---
     async function deleteUser(userId, userName) {
         const result = await Swal.fire({
             title: 'Anda yakin?',
-            text: `Anda akan menghapus pengguna "${userName}". Aksi ini tidak dapat dibatalkan!`,
+            text: `Anda akan menghapus pengguna "${userName}" dari daftar. Aksi ini tidak akan menghapus akun login mereka.`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
@@ -38,31 +38,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (result.isConfirmed) {
-            // Panggil RPC yang telah diperbarui
-            const { data, error } = await supabase.rpc('delete_user_by_id', { user_id_to_delete: userId });
+            // Panggil perintah .delete() standar
+            const { error } = await supabase
+                .from('users')
+                .delete()
+                .eq('id', userId);
 
             if (error) {
                 console.error('Gagal menghapus pengguna:', error);
-                // Pesan error dari RAISE EXCEPTION akan ada di sini
-                Swal.fire(
-                    'Gagal!',
-                    `Terjadi kesalahan: ${error.message}`,
-                    'error'
-                );
+                // Menampilkan pesan error yang lebih ramah dari RLS
+                let friendlyMessage = `Terjadi kesalahan: ${error.message}`;
+                if (error.message.includes('violates row-level security policy')) {
+                    friendlyMessage = 'Akses ditolak. Hanya admin yang dapat menghapus pengguna.';
+                }
+                Swal.fire('Gagal!', friendlyMessage, 'error');
             } else {
-                // Tampilkan pesan sukses dari return value fungsi
-                Swal.fire(
-                    'Berhasil!',
-                    data, // 'data' akan berisi "Pengguna berhasil dihapus."
-                    'success'
-                );
-                fetchAndRenderPengguna();
+                Swal.fire('Dihapus!', `Pengguna "${userName}" telah berhasil dihapus.`, 'success');
+                fetchAndRenderPengguna(); 
             }
         }
     }
 
+    async function checkAdminRole() {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return false;
+        return session.user.app_metadata.user_role === 'admin';
+    }
+
     async function fetchAndRenderPengguna() {
         penggunaTbody.innerHTML = '<tr><td colspan="4">Memuat data...</td></tr>';
+        const isAdmin = await checkAdminRole();
         const { data, error } = await supabase.from('users').select('*').order('created_at', { ascending: false });
         if (error) { console.error('Error fetching users:', error); penggunaTbody.innerHTML = '<tr><td colspan="4" class="error-text">Gagal memuat data.</td></tr>'; return; }
         if (data.length === 0) { penggunaTbody.innerHTML = '<tr><td colspan="4">Belum ada pengguna.</td></tr>'; return; }
@@ -71,7 +76,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const tanggalDibuat = new Date(user.created_at).toLocaleDateString('id-ID', { dateStyle: 'long' });
             const nomorWa = user.nomer_whatsapp ? user.nomer_whatsapp.replace('@c.us', '') : '-';
             
-            // PERUBAHAN: Menambahkan tombol delete di dalam action-buttons
+            const deleteButtonHtml = isAdmin ? `<button class="btn-delete" data-id="${user.id}" data-nama="${user.nama}">Hapus</button>` : '';
+
             return `
                 <tr>
                     <td data-label="Nama"><span>${user.nama}</span></td>
@@ -80,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td data-label="Aksi">
                         <div class="action-buttons">
                             <button class="btn-default" data-id="${user.id}" data-nama="${user.nama}">Set Default</button>
-                            <button class="btn-delete" data-id="${user.id}" data-nama="${user.nama}">Hapus</button>
+                            ${deleteButtonHtml}
                         </div>
                     </td>
                 </tr>
@@ -98,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target.classList.contains('btn-default') && !target.disabled) {
             setDefaultUser(target.dataset.id, target.dataset.nama);
         }
-        // PERUBAHAN: Menambahkan event listener untuk tombol hapus
         if (target.classList.contains('btn-delete')) {
             deleteUser(target.dataset.id, target.dataset.nama);
         }
