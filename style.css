@@ -1,21 +1,14 @@
-/* style.css (Versi Perbaikan Warna) */
+/* style.css (Versi Perbaikan Warna + Dashboard) */
 :root {
     --bg-color: #121212;
     --card-color: #1e1e1e;
     --text-color: #e0e0e0;
     --border-color: #333;
-    
-    /* === PERUBAHAN WARNA === */
-    /* Warna primer dibuat lebih cerah dan hidup */
-    --primary-color: #128C7E; /* Sebelumnya #075E54 */
-    --primary-color-hover: #16a34a; /* Warna hover baru yang lebih terang */
-
-    /* Warna sekunder (logout) juga dibuat sedikit lebih cerah */
-    --secondary-color: #4b5563; /* Sebelumnya #555 */
+    --primary-color: #128C7E;
+    --primary-color-hover: #16a34a;
+    --secondary-color: #4b5563;
     --secondary-color-hover: #6b7280;
-    
-    /* Warna untuk tombol hapus */
-    --danger-color: #dc2626; /* Sebelumnya #b91c1c */
+    --danger-color: #dc2626;
     --danger-color-hover: #ef4444;
 }
 
@@ -56,9 +49,8 @@ nav { display: flex; gap: 10px; flex-grow: 1; }
     color: white; font-weight: bold;
 }
 #logout-button { 
-    background-color: var(--secondary-color);
-    padding: 10px 15px;
-    font-size: 14px;
+    background-color: var(--secondary-color); padding: 10px 15px; font-size: 14px;
+    border: none; color: white; cursor: pointer; border-radius: 4px;
 }
 #logout-button:hover { background-color: var(--secondary-color-hover); }
 
@@ -71,36 +63,19 @@ main h2 { margin-top: 0; }
     margin-bottom: 20px;
 }
 .page-header h2 { margin: 0; }
-.page-header .btn-primary {
-    font-size: 14px;
-    padding: 10px 15px;
-}
+.page-header .btn-primary { font-size: 14px; padding: 10px 15px; }
 
 /* === FORM LOGIN === */
-#login-container {
-    max-width: 400px; margin: 50px auto; padding: 30px;
-    background-color: var(--card-color); border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
+#login-container { max-width: 400px; margin: 50px auto; padding: 30px; background-color: var(--card-color); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
 #login-form { display: flex; flex-direction: column; }
 #login-form h2 { text-align: center; margin: 0 0 25px 0; }
-#login-form input {
-    background-color: #333; border: 1px solid #444; color: var(--text-color);
-    padding: 12px; margin-bottom: 15px; border-radius: 4px; font-size: 16px;
-}
-button[type="submit"] {
-    background-color: var(--primary-color); color: white; border: none;
-    padding: 12px 15px; border-radius: 4px; font-size: 16px; cursor: pointer;
-    transition: background-color 0.2s;
-}
+#login-form input { background-color: #333; border: 1px solid #444; color: var(--text-color); padding: 12px; margin-bottom: 15px; border-radius: 4px; font-size: 16px; }
+button[type="submit"] { background-color: var(--primary-color); color: white; border: none; padding: 12px 15px; border-radius: 4px; font-size: 16px; cursor: pointer; transition: background-color 0.2s; }
 button[type="submit"]:hover { background-color: var(--primary-color-hover); }
 .error-text { color: #ff5c5c; text-align: center; min-height: 20px; }
 
 /* === TABEL === */
-.table-wrapper {
-    overflow-x: auto; background-color: var(--card-color);
-    border-radius: 8px; padding: 10px;
-}
+.table-wrapper { overflow-x: auto; background-color: var(--card-color); border-radius: 8px; padding: 10px; }
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
 thead th { background-color: #2a2a2a; font-weight: 600; }
@@ -113,28 +88,28 @@ td:first-child { white-space: nowrap; }
 .btn-delete { background-color: var(--danger-color); } .btn-delete:hover { background-color: var(--danger-color-hover); }
 
 /* === MODAL FORM === */
-.modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.7); display: flex;
-    justify-content: center; align-items: center; z-index: 1000;
-}
-.modal-content {
-    background-color: var(--card-color); padding: 30px; border-radius: 8px;
-    width: 90%; max-width: 450px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-}
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-content { background-color: var(--card-color); padding: 30px; border-radius: 8px; width: 90%; max-width: 450px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
 .modal-content h3 { margin-top: 0; margin-bottom: 25px; text-align: center; }
 .form-group { margin-bottom: 20px; }
 .form-group label { display: block; margin-bottom: 8px; color: #ccc; font-size: 14px; }
-.form-group input, .form-group select {
-    width: 100%; padding: 10px; background-color: #333;
-    border: 1px solid #444; color: var(--text-color); border-radius: 4px;
-    font-size: 16px; box-sizing: border-box;
-}
+.form-group input, .form-group select { width: 100%; padding: 10px; background-color: #333; border: 1px solid #444; color: var(--text-color); border-radius: 4px; font-size: 16px; box-sizing: border-box; }
 .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 30px; }
 .btn-primary { background-color: var(--primary-color); color: white; border: none;}
 .btn-primary:hover { background-color: var(--primary-color-hover); }
-.btn-secondary { background-color: var(--secondary-color); color: white; border: none; padding: 10px 15px; }
+.btn-secondary { background-color: var(--secondary-color); color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
 .btn-secondary:hover { background-color: var(--secondary-color-hover); }
+
+/* === STYLE DASHBOARD BARU === */
+.dashboard-filters { display: flex; gap: 15px; }
+.dashboard-filters select { background-color: #333; border: 1px solid #555; color: var(--text-color); padding: 8px 12px; border-radius: 4px; font-size: 14px; }
+.kpi-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px; }
+.kpi-card { background-color: var(--card-color); padding: 25px; border-radius: 8px; border-left: 5px solid var(--primary-color); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.kpi-card h3 { margin-top: 0; margin-bottom: 10px; font-size: 16px; color: #aaa; font-weight: 500; }
+.kpi-card p { margin: 0; font-size: 28px; font-weight: bold; color: var(--text-color); }
+.chart-container { background-color: var(--card-color); padding: 20px; border-radius: 8px; margin-top: 30px; position: relative; }
+.chart-container h3 { text-align: center; margin-top: 0; margin-bottom: 25px; }
+#chart-no-data { text-align: center; color: #888; font-style: italic; }
 
 /* === RESPONSIVE === */
 @media screen and (max-width: 768px) {
@@ -142,19 +117,9 @@ td:first-child { white-space: nowrap; }
     .table-wrapper { background-color: transparent; padding: 0; border-radius: 0; }
     table, thead, tbody, th, td, tr { display: block; }
     thead { display: none; }
-    tr {
-        margin-bottom: 1rem; border-radius: 8px; background-color: var(--card-color);
-        border: 1px solid var(--border-color); padding: 0.5rem;
-    }
-    td {
-        display: flex; justify-content: space-between; align-items: center;
-        text-align: right; font-size: 14px; padding: 10px;
-        border-bottom: 1px dotted #3a3a3a;
-    }
+    tr { margin-bottom: 1rem; border-radius: 8px; background-color: var(--card-color); border: 1px solid var(--border-color); padding: 0.5rem; }
+    td { display: flex; justify-content: space-between; align-items: center; text-align: right; font-size: 14px; padding: 10px; border-bottom: 1px dotted #3a3a3a; }
     tr td:last-child { border-bottom: 0; }
-    td::before {
-        content: attr(data-label); font-weight: bold; color: #aaa; text-transform: uppercase;
-        font-size: 12px; text-align: left; margin-right: 15px; flex-shrink: 0;
-    }
+    td::before { content: attr(data-label); font-weight: bold; color: #aaa; text-transform: uppercase; font-size: 12px; text-align: left; margin-right: 15px; flex-shrink: 0; }
     td span, td .action-buttons { word-break: break-all; }
 }

@@ -1,9 +1,10 @@
-// js/app.js
+// js/app.js (Versi dengan Halaman Dashboard)
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- ELEMEN DOM UTAMA & NAVIGASI ---
     const loginContainer = document.getElementById('login-container');
     const appContainer = document.getElementById('app-container');
+    const dashboardContainer = document.getElementById('dashboard-container');
     const logsContainer = document.getElementById('logs-container');
     const kategoriContainer = document.getElementById('kategori-container');
 
@@ -12,25 +13,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorMessage = document.getElementById('error-message');
     const logsTbody = document.getElementById('logs-tbody');
 
+    const navDashboardButton = document.getElementById('nav-dashboard');
     const navLogsButton = document.getElementById('nav-logs');
     const navKategoriButton = document.getElementById('nav-kategori');
 
     // --- FUNGSI PENGATUR TAMPILAN (VIEW) ---
 
     function showView(viewName) {
+        dashboardContainer.classList.add('hidden');
         logsContainer.classList.add('hidden');
         kategoriContainer.classList.add('hidden');
+        navDashboardButton.classList.remove('active');
         navLogsButton.classList.remove('active');
         navKategoriButton.classList.remove('active');
 
-        if (viewName === 'logs') {
+        if (viewName === 'dashboard') {
+            dashboardContainer.classList.remove('hidden');
+            navDashboardButton.classList.add('active');
+            window.initializeDashboard();
+        } else if (viewName === 'logs') {
             logsContainer.classList.remove('hidden');
             navLogsButton.classList.add('active');
             fetchLogs();
         } else if (viewName === 'kategori') {
             kategoriContainer.classList.remove('hidden');
             navKategoriButton.classList.add('active');
-            fetchAndRenderKategori(); // Panggil fungsi dari kategori.js
+            fetchAndRenderKategori();
         }
     }
 
@@ -42,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function showAppView() {
         loginContainer.classList.add('hidden');
         appContainer.classList.remove('hidden');
-        showView('logs'); // Halaman default setelah login
+        showView('dashboard'); // Halaman default adalah Dashboard
     }
 
     // --- FUNGSI LOGIKA (AUTH & LOGS) ---
@@ -65,10 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ? '<tr><td colspan="4">Belum ada aktivitas.</td></tr>'
             : data.map(log => {
                 const timestamp = new Date(log.timestamp).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
-            // Format nomor WA sebelum ditampilkan
-            const formattedWaNumber = log.user_wa_number 
-                ? log.user_wa_number.replace('@c.us', '') 
-                : '-';
+                const formattedWaNumber = log.user_wa_number ? log.user_wa_number.replace('@c.us', '') : '-';
                 return `
                     <tr>
                         <td data-label="Waktu"><span>${timestamp}</span></td>
@@ -111,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- EVENT LISTENERS ---
     loginForm.addEventListener('submit', handleLogin);
     logoutButton.addEventListener('click', handleLogout);
+    navDashboardButton.addEventListener('click', () => showView('dashboard'));
     navLogsButton.addEventListener('click', () => showView('logs'));
     navKategoriButton.addEventListener('click', () => showView('kategori'));
 
