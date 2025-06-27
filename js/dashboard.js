@@ -1,4 +1,4 @@
-// js/dashboard.js
+// js/dashboard.js (Versi Revisi Final)
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- ELEMEN DOM DASHBOARD ---
@@ -10,49 +10,50 @@ document.addEventListener('DOMContentLoaded', () => {
     const expenseChartCanvas = document.getElementById('expense-chart');
     const chartNoDataEl = document.getElementById('chart-no-data');
 
-    let expenseChart; // Variabel untuk menyimpan instance chart
+    // Elemen baru untuk toggle view
+    const kpiViewBtn = document.getElementById('kpi-view-btn');
+    const chartViewBtn = document.getElementById('chart-view-btn');
+    const kpiViewContainer = document.getElementById('kpi-view-container');
+    const chartViewContainer = document.getElementById('chart-view-container');
+
+    let expenseChart; 
 
     // --- FUNGSI HELPER ---
-
-    // Format Angka ke Rupiah
-    function formatCurrency(value) {
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0
-        }).format(value);
-    }
-
-    // Mendapatkan rentang tanggal berdasarkan periode yang dipilih
+    function formatCurrency(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value); }
     function getPeriodDates(period) {
         const now = new Date();
         let startDate = new Date();
-        const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999); // Akhir hari ini
-
-        if (period === 'hari_ini') {
-            startDate.setHours(0, 0, 0, 0);
-        } else if (period === 'minggu_ini') {
-            const dayOfWeek = now.getDay(); // 0 = Minggu, 1 = Senin
-            startDate = new Date(now.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)));
-            startDate.setHours(0, 0, 0, 0);
-        } else if (period === 'bulan_ini') {
-            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        } else if (period === 'tahun_ini') {
-            startDate = new Date(now.getFullYear(), 0, 1);
-        }
+        const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+        if (period === 'hari_ini') { startDate.setHours(0, 0, 0, 0); } 
+        else if (period === 'minggu_ini') { const dayOfWeek = now.getDay(); startDate = new Date(now.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1))); startDate.setHours(0, 0, 0, 0); } 
+        else if (period === 'bulan_ini') { startDate = new Date(now.getFullYear(), now.getMonth(), 1); } 
+        else if (period === 'tahun_ini') { startDate = new Date(now.getFullYear(), 0, 1); }
         return { startDate, endDate };
     }
 
-
     // --- FUNGSI UTAMA ---
 
-    // Mengambil daftar user untuk filter
-    async function populateUserFilter() {
-        const { data, error } = await supabase.from('users').select('id, nama').order('nama');
-        if (error) {
-            console.error('Gagal mengambil data user:', error);
-            return;
+    // Fungsi baru untuk mengatur tampilan dashboard
+    function showDashboardView(view) {
+        kpiViewBtn.classList.remove('active');
+        chartViewBtn.classList.remove('active');
+        kpiViewContainer.classList.add('hidden');
+        chartViewContainer.classList.add('hidden');
+
+        if (view === 'kpi') {
+            kpiViewBtn.classList.add('active');
+            kpiViewContainer.classList.remove('hidden');
+        } else if (view === 'chart') {
+            chartViewBtn.classList.add('active');
+            chartViewContainer.classList.remove('hidden');
         }
+    }
+
+    // Mengambil daftar user dan mengatur default
+    async function populateAndSetUserFilter() {
+        if (userFilter.options.length > 1) return; // Jangan isi ulang jika sudah ada
+        const { data, error } = await supabase.from('users').select('id, nama').order('nama');
+        if (error) { console.error('Gagal mengambil data user:', error); return; }
 
         userFilter.innerHTML = '<option value="semua">Semua User</option>';
         data.forEach(user => {
@@ -61,69 +62,42 @@ document.addEventListener('DOMContentLoaded', () => {
             option.textContent = user.nama;
             userFilter.appendChild(option);
         });
+
+        // BARU: Set nilai default untuk filter
+        userFilter.value = "006d7ce0-335d-41d1-a0e8-7dc93ee58eaa";
+        periodFilter.value = "hari_ini";
     }
 
-    // Mengupdate semua data di dashboard
     async function updateDashboard() {
-        // Tampilkan status loading
         totalPemasukanEl.textContent = 'Memuat...';
         totalPengeluaranEl.textContent = 'Memuat...';
         saldoAkhirEl.textContent = 'Memuat...';
-        expenseChartCanvas.style.display = 'none';
-        chartNoDataEl.classList.add('hidden');
-
+        
         const selectedUserId = userFilter.value;
         const selectedPeriod = periodFilter.value;
         const { startDate, endDate } = getPeriodDates(selectedPeriod);
 
-        // Bangun query ke Supabase
-        let query = supabase
-            .from('transaksi')
-            .select('nominal, kategori(nama_kategori, tipe)')
-            .gte('tanggal', startDate.toISOString())
-            .lte('tanggal', endDate.toISOString());
-        
-        if (selectedUserId !== 'semua') {
-            query = query.eq('id_user', selectedUserId);
-        }
-
+        let query = supabase.from('transaksi').select('nominal, kategori(nama_kategori, tipe)').gte('tanggal', startDate.toISOString()).lte('tanggal', endDate.toISOString());
+        if (selectedUserId && selectedUserId !== 'semua') { query = query.eq('id_user', selectedUserId); }
         const { data, error } = await query;
 
-        if (error) {
-            console.error('Gagal mengambil data transaksi:', error);
-            totalPemasukanEl.textContent = 'Error';
-            return;
-        }
+        if (error) { console.error('Gagal mengambil data transaksi:', error); totalPemasukanEl.textContent = 'Error'; return; }
 
-        // Hitung total
-        let totalIncome = 0;
-        let totalExpense = 0;
+        let totalIncome = 0, totalExpense = 0;
         const expenseByCategory = {};
-
         data.forEach(tx => {
-            if (tx.kategori.tipe === 'INCOME') {
-                totalIncome += tx.nominal;
-            } else if (tx.kategori.tipe === 'EXPENSE') {
-                totalExpense += tx.nominal;
-                const categoryName = tx.kategori.nama_kategori;
-                expenseByCategory[categoryName] = (expenseByCategory[categoryName] || 0) + tx.nominal;
-            }
+            if (tx.kategori && tx.kategori.tipe === 'INCOME') { totalIncome += tx.nominal; } 
+            else if (tx.kategori && tx.kategori.tipe === 'EXPENSE') { totalExpense += tx.nominal; const categoryName = tx.kategori.nama_kategori; expenseByCategory[categoryName] = (expenseByCategory[categoryName] || 0) + tx.nominal; }
         });
 
-        // Update KPI Cards
         totalPemasukanEl.textContent = formatCurrency(totalIncome);
         totalPengeluaranEl.textContent = formatCurrency(totalExpense);
         saldoAkhirEl.textContent = formatCurrency(totalIncome - totalExpense);
-
-        // Update Chart
         renderExpenseChart(expenseByCategory);
     }
     
     function renderExpenseChart(data) {
-        if (expenseChart) {
-            expenseChart.destroy(); // Hancurkan chart lama sebelum membuat yg baru
-        }
-        
+        if (expenseChart) { expenseChart.destroy(); }
         const labels = Object.keys(data);
         const values = Object.values(data);
         
@@ -132,46 +106,25 @@ document.addEventListener('DOMContentLoaded', () => {
             chartNoDataEl.classList.remove('hidden');
             return;
         }
-
         expenseChartCanvas.style.display = 'block';
         chartNoDataEl.classList.add('hidden');
 
         const ctx = expenseChartCanvas.getContext('2d');
         expenseChart = new Chart(ctx, {
-            type: 'pie', // Tipe chart: pie
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Pengeluaran',
-                    data: values,
-                    backgroundColor: [
-                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-                        '#FF9F40', '#C9CBCF', '#E7E9ED', '#7C73C0', '#F39C12'
-                    ],
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            color: '#e0e0e0' // Warna teks legenda
-                        }
-                    }
-                }
-            }
+            type: 'pie',
+            data: { labels, datasets: [{ label: 'Pengeluaran', data: values, backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#C9CBCF'], hoverOffset: 4 }] },
+            options: { responsive: true, plugins: { legend: { position: 'top', labels: { color: '#e0e0e0' } } } }
         });
     }
 
-    // Inisialisasi Dashboard (akan dipanggil oleh app.js)
-    window.initializeDashboard = () => {
-        populateUserFilter();
-        updateDashboard();
+    window.initializeDashboard = async () => {
+        showDashboardView('kpi'); // Set tampilan default ke KPI
+        await populateAndSetUserFilter(); // Isi filter dan set default
+        await updateDashboard(); // Baru update dashboard setelah filter siap
     };
 
-    // --- EVENT LISTENERS ---
     userFilter.addEventListener('change', updateDashboard);
     periodFilter.addEventListener('change', updateDashboard);
+    kpiViewBtn.addEventListener('click', () => showDashboardView('kpi'));
+    chartViewBtn.addEventListener('click', () => showDashboardView('chart'));
 });
