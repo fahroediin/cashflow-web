@@ -1,31 +1,6 @@
-/* style.css (Versi Perbaikan Warna + Dashboard + Nav Mobile) */
-:root {
-    --bg-color: #121212;
-    --card-color: #1e1e1e;
-    --text-color: #e0e0e0;
-    --border-color: #333;
-    --primary-color: #128C7E;
-    --primary-color-hover: #16a34a;
-    --secondary-color: #4b5563;
-    --secondary-color-hover: #6b7280;
-    --danger-color: #dc2626;
-    --danger-color-hover: #ef4444;
-}
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    margin: 0;
-    padding: 20px;
-    line-height: 1.6;
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* === HEADER & NAVIGASI === */
+:root { --bg-color: #121212; --card-color: #1e1e1e; --text-color: #e0e0e0; --border-color: #333; --primary-color: #128C7E; --primary-color-hover: #16a34a; --secondary-color: #4b5563; --secondary-color-hover: #6b7280; --danger-color: #dc2626; --danger-color-hover: #ef4444; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; line-height: 1.6; }
+.hidden { display: none !important; }
 header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
 h1 { margin: 0; }
 nav { display: flex; gap: 10px; flex-grow: 1; flex-wrap: wrap; }
@@ -34,14 +9,10 @@ nav { display: flex; gap: 10px; flex-grow: 1; flex-wrap: wrap; }
 .nav-button.active { background-color: var(--primary-color); border-color: var(--primary-color); color: white; font-weight: bold; }
 #logout-button { background-color: var(--secondary-color); padding: 10px 15px; font-size: 14px; border: none; color: white; cursor: pointer; border-radius: 4px; }
 #logout-button:hover { background-color: var(--secondary-color-hover); }
-
-/* === KONTEN UTAMA & JUDUL HALAMAN === */
 main h2 { margin-top: 0; }
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
 .page-header h2 { margin: 0; }
 .page-header .btn-primary { font-size: 14px; padding: 10px 15px; }
-
-/* === FORM LOGIN === */
 #login-container { max-width: 400px; margin: 50px auto; padding: 30px; background-color: var(--card-color); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
 #login-form { display: flex; flex-direction: column; }
 #login-form h2 { text-align: center; margin: 0 0 25px 0; }
@@ -49,8 +20,6 @@ main h2 { margin-top: 0; }
 button[type="submit"] { background-color: var(--primary-color); color: white; border: none; padding: 12px 15px; border-radius: 4px; font-size: 16px; cursor: pointer; transition: background-color 0.2s; }
 button[type="submit"]:hover { background-color: var(--primary-color-hover); }
 .error-text { color: #ff5c5c; text-align: center; min-height: 20px; }
-
-/* === TABEL === */
 .table-wrapper { overflow-x: auto; background-color: var(--card-color); border-radius: 8px; padding: 10px; }
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
@@ -62,11 +31,9 @@ td:first-child { white-space: nowrap; }
 .action-buttons button { font-size: 14px; padding: 6px 12px; border-radius: 4px; color: white; border: none; cursor: pointer; }
 .btn-edit { background-color: #0ea5e9; } .btn-edit:hover { background-color: #38bdf8; }
 .btn-delete { background-color: var(--danger-color); } .btn-delete:hover { background-color: var(--danger-color-hover); }
-.btn-default { background-color: #f59e0b; padding: 6px 12px; font-size: 14px; border: none; color: white; cursor: pointer; border-radius: 4px; }
-.btn-default:hover { background-color: #d97706; }
+.btn-default { background-color: #f59e0b; } .btn-default:hover { background-color: #d97706; }
 .btn-default:disabled, .btn-default.active { background-color: #6b7280; cursor: not-allowed; }
-
-/* === MODAL FORM === */
+.btn-create-login { background-color: #22c55e; } .btn-create-login:hover { background-color: #16a34a; }
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
 .modal-content { background-color: var(--card-color); padding: 30px; border-radius: 8px; width: 90%; max-width: 450px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
 .modal-content h3 { margin-top: 0; margin-bottom: 25px; text-align: center; }
@@ -78,8 +45,6 @@ td:first-child { white-space: nowrap; }
 .btn-primary:hover { background-color: var(--primary-color-hover); }
 .btn-secondary { background-color: var(--secondary-color); color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
 .btn-secondary:hover { background-color: var(--secondary-color-hover); }
-
-/* === STYLE DASHBOARD === */
 .dashboard-filters { display: flex; gap: 15px; }
 .dashboard-filters select { background-color: #333; border: 1px solid #555; color: var(--text-color); padding: 8px 12px; border-radius: 4px; font-size: 14px; }
 .view-toggle { margin: 20px 0; display: flex; justify-content: center; gap: 10px; }
@@ -93,8 +58,6 @@ td:first-child { white-space: nowrap; }
 .chart-container { background-color: var(--card-color); padding: 20px; border-radius: 8px; position: relative; }
 .chart-container h3 { text-align: center; margin-top: 0; margin-bottom: 25px; }
 #chart-no-data { text-align: center; color: #888; font-style: italic; }
-
-/* === RESPONSIVE === */
 @media screen and (max-width: 768px) {
     body { padding: 10px; }
     header { align-items: flex-start; }

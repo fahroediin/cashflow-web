@@ -1,4 +1,4 @@
-// js/dashboard.js (Versi dengan localStorage)
+// js/dashboard.js
 document.addEventListener('DOMContentLoaded', () => {
     const userFilter = document.getElementById('user-filter');
     const periodFilter = document.getElementById('period-filter');
@@ -26,43 +26,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showDashboardView(view) {
-        kpiViewBtn.classList.remove('active');
-        chartViewBtn.classList.remove('active');
-        kpiViewContainer.classList.add('hidden');
-        chartViewContainer.classList.add('hidden');
+        kpiViewBtn.classList.remove('active'); chartViewBtn.classList.remove('active');
+        kpiViewContainer.classList.add('hidden'); chartViewContainer.classList.add('hidden');
         if (view === 'kpi') { kpiViewBtn.classList.add('active'); kpiViewContainer.classList.remove('hidden'); } 
         else if (view === 'chart') { chartViewBtn.classList.add('active'); chartViewContainer.classList.remove('hidden'); }
     }
 
     async function populateAndSetUserFilter() {
         if (userFilter.options.length > 1) {
-            const defaultUserId = localStorage.getItem('defaultUserId') || '006d7ce0-335d-41d1-a0e8-7dc93ee58eaa';
-            userFilter.value = defaultUserId;
+            userFilter.value = localStorage.getItem('defaultUserId') || '006d7ce0-335d-41d1-a0e8-7dc93ee58eaa';
             return;
         }
         const { data, error } = await supabase.from('users').select('id, nama').order('nama');
         if (error) { console.error('Gagal mengambil data user:', error); return; }
         userFilter.innerHTML = '<option value="semua">Semua User</option>';
-        data.forEach(user => {
-            const option = document.createElement('option');
-            option.value = user.id;
-            option.textContent = user.nama;
-            userFilter.appendChild(option);
-        });
-        const defaultUserId = localStorage.getItem('defaultUserId') || '006d7ce0-335d-41d1-a0e8-7dc93ee58eaa';
-        userFilter.value = defaultUserId;
+        data.forEach(user => { const option = document.createElement('option'); option.value = user.id; option.textContent = user.nama; userFilter.appendChild(option); });
+        userFilter.value = localStorage.getItem('defaultUserId') || '006d7ce0-335d-41d1-a0e8-7dc93ee58eaa';
         periodFilter.value = "hari_ini";
     }
 
-    async function updateDashboard() {
-        totalPemasukanEl.textContent = 'Memuat...';
-        totalPengeluaranEl.textContent = 'Memuat...';
-        saldoAkhirEl.textContent = 'Memuat...';
-        const selectedUserId = userFilter.value;
-        const selectedPeriod = periodFilter.value;
-        const { startDate, endDate } = getPeriodDates(selectedPeriod);
+    async function updateDashboard(isAdmin, chatbotProfile) {
+        totalPemasukanEl.textContent = 'Memuat...'; totalPengeluaranEl.textContent = 'Memuat...'; saldoAkhirEl.textContent = 'Memuat...';
+        const { startDate, endDate } = getPeriodDates(periodFilter.value);
         let query = supabase.from('transaksi').select('nominal, kategori(nama_kategori, tipe)').gte('tanggal', startDate.toISOString()).lte('tanggal', endDate.toISOString());
-        if (selectedUserId && selectedUserId !== 'semua') { query = query.eq('id_user', selectedUserId); }
+        
+        if (isAdmin) {
+            const selectedUserId = userFilter.value;
+            if (selectedUserId && selectedUserId !== 'semua') query = query.eq('id_user', selectedUserId);
+        } else {
+            if (chatbotProfile) { query = query.eq('id_user', chatbotProfile.id); } 
+            else { totalPemasukanEl.textContent = formatCurrency(0); totalPengeluaranEl.textContent = formatCurrency(0); saldoAkhirEl.textContent = formatCurrency(0); renderExpenseChart({}); return; }
+        }
+
         const { data, error } = await query;
         if (error) { console.error('Gagal mengambil data transaksi:', error); totalPemasukanEl.textContent = 'Error'; return; }
         let totalIncome = 0, totalExpense = 0;
@@ -71,9 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (tx.kategori && tx.kategori.tipe === 'INCOME') { totalIncome += tx.nominal; } 
             else if (tx.kategori && tx.kategori.tipe === 'EXPENSE') { totalExpense += tx.nominal; const categoryName = tx.kategori.nama_kategori; expenseByCategory[categoryName] = (expenseByCategory[categoryName] || 0) + tx.nominal; }
         });
-        totalPemasukanEl.textContent = formatCurrency(totalIncome);
-        totalPengeluaranEl.textContent = formatCurrency(totalExpense);
-        saldoAkhirEl.textContent = formatCurrency(totalIncome - totalExpense);
+        totalPemasukanEl.textContent = formatCurrency(totalIncome); totalPengeluaranEl.textContent = formatCurrency(totalExpense); saldoAkhirEl.textContent = formatCurrency(totalIncome - totalExpense);
         renderExpenseChart(expenseByCategory);
     }
     
@@ -82,24 +75,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const labels = Object.keys(data);
         const values = Object.values(data);
         if (labels.length === 0) { expenseChartCanvas.style.display = 'none'; chartNoDataEl.classList.remove('hidden'); return; }
-        expenseChartCanvas.style.display = 'block';
-        chartNoDataEl.classList.add('hidden');
+        expenseChartCanvas.style.display = 'block'; chartNoDataEl.classList.add('hidden');
         const ctx = expenseChartCanvas.getContext('2d');
-        expenseChart = new Chart(ctx, {
-            type: 'pie',
-            data: { labels, datasets: [{ label: 'Pengeluaran', data: values, backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#C9CBCF'], hoverOffset: 4 }] },
-            options: { responsive: true, plugins: { legend: { position: 'top', labels: { color: '#e0e0e0' } } } }
-        });
+        expenseChart = new Chart(ctx, { type: 'pie', data: { labels, datasets: [{ label: 'Pengeluaran', data: values, backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#C9CBCF'], hoverOffset: 4 }] }, options: { responsive: true, plugins: { legend: { position: 'top', labels: { color: '#e0e0e0' } } } } });
     }
 
-    window.initializeDashboard = async () => {
+    window.initializeDashboard = async (isAdmin, chatbotProfile) => {
+        const filterContainer = document.querySelector('#dashboard-container .dashboard-filters');
         showDashboardView('kpi');
-        await populateAndSetUserFilter();
-        await updateDashboard();
+        if (isAdmin) {
+            filterContainer.style.display = 'flex';
+            await populateAndSetUserFilter();
+        } else {
+            filterContainer.style.display = 'none';
+        }
+        await updateDashboard(isAdmin, chatbotProfile);
     };
-
-    userFilter.addEventListener('change', updateDashboard);
-    periodFilter.addEventListener('change', updateDashboard);
+    
+    periodFilter.addEventListener('change', () => window.dispatchEvent(new Event('update-dashboard')));
+    userFilter.addEventListener('change', () => window.dispatchEvent(new Event('update-dashboard')));
     kpiViewBtn.addEventListener('click', () => showDashboardView('kpi'));
     chartViewBtn.addEventListener('click', () => showDashboardView('chart'));
+    window.addEventListener('update-dashboard', () => {
+        const isAdmin = document.querySelector('#nav-pengguna').style.display !== 'none';
+        window.updateDashboard(isAdmin, window.currentUserChatbotProfile);
+    });
 });
