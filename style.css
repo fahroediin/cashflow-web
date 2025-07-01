@@ -79,6 +79,46 @@ td:first-child { white-space: nowrap; }
 .btn-secondary { background-color: var(--secondary-color); color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
 .btn-secondary:hover { background-color: var(--secondary-color-hover); }
 
+/* === SWEETALERT2 DARK THEME OVERRIDE === */
+.swal2-popup {
+    background: var(--card-color) !important;
+    color: var(--text-color) !important;
+    border-radius: 8px !important;
+}
+
+.swal2-title {
+    color: var(--text-color) !important;
+}
+
+.swal2-html-container {
+    color: #ccc !important;
+}
+
+.swal2-icon.swal2-warning {
+    border-color: #f8bb86 !important;
+    color: #f8bb86 !important;
+}
+
+.swal2-confirm {
+    background-color: var(--primary-color) !important;
+    box-shadow: none !important;
+}
+.swal2-confirm:hover {
+    background-color: var(--primary-color-hover) !important;
+}
+
+.swal2-cancel {
+    background-color: var(--secondary-color) !important;
+    box-shadow: none !important;
+}
+.swal2-cancel:hover {
+    background-color: var(--secondary-color-hover) !important;
+}
+
+.swal2-styled:focus {
+    box-shadow: none !important;
+}
+
 /* === STYLE DASHBOARD === */
 .dashboard-filters { display: flex; gap: 15px; }
 .dashboard-filters select { background-color: #333; border: 1px solid #555; color: var(--text-color); padding: 8px 12px; border-radius: 4px; font-size: 14px; }

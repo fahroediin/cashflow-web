@@ -1,4 +1,4 @@
-// js/kategori.js
+// js/kategori.js (Versi dengan SweetAlert2)
 
 // --- ELEMEN DOM ---
 const kategoriTbody = document.getElementById('kategori-tbody');
@@ -42,7 +42,7 @@ async function fetchAndRenderKategori() {
             <td data-label="Aksi">
                 <div class="action-buttons">
                     <button class="btn-edit" data-id="${kategori.id}" data-nama="${kategori.nama_kategori}" data-tipe="${kategori.tipe}">Edit</button>
-                    <button class="btn-delete" data-id="${kategori.id}">Hapus</button>
+                    <button class="btn-delete" data-id="${kategori.id}" data-nama="${kategori.nama_kategori}">Hapus</button>
                 </div>
             </td>
         `;
@@ -79,7 +79,12 @@ async function handleFormSubmit(event) {
     const tipe = tipeKategoriSelect.value;
 
     if (!nama_kategori || !tipe) {
-        alert('Semua field harus diisi.');
+        // --- GANTI alert() dengan Swal.fire() untuk validasi ---
+        Swal.fire({
+            icon: 'warning',
+            title: 'Data Tidak Lengkap',
+            text: 'Nama kategori dan tipe harus diisi.',
+        });
         return;
     }
 
@@ -91,22 +96,63 @@ async function handleFormSubmit(event) {
         : await supabase.from('kategori').insert([{ nama_kategori, tipe }]); // Tambah
 
     saveButton.disabled = false;
+    
     if (error) {
-        alert('Gagal menyimpan data: ' + error.message);
+        // --- GANTI alert() dengan Swal.fire() untuk error ---
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal!',
+            text: `Terjadi kesalahan saat menyimpan data: ${error.message}`,
+        });
         saveButton.textContent = id ? 'Update' : 'Simpan';
+        console.error("Gagal menyimpan data:", error);
     } else {
+        // --- TAMBAHKAN notifikasi sukses ---
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: 'Kategori berhasil disimpan.',
+            showConfirmButton: false,
+            timer: 1500
+        });
         closeModal();
         fetchAndRenderKategori();
     }
 }
 
-async function handleDeleteClick(id) {
-    if (!confirm('Apakah Anda yakin ingin menghapus kategori ini?')) return;
-    const { error } = await supabase.from('kategori').delete().eq('id', id);
-    if (error) {
-        alert('Gagal menghapus data: ' + error.message);
-    } else {
-        fetchAndRenderKategori();
+async function handleDeleteClick(id, nama) {
+    // --- GANTI confirm() dengan Swal.fire() ---
+    const result = await Swal.fire({
+        title: 'Apakah Anda yakin?',
+        text: `Anda akan menghapus kategori "${nama}". Aksi ini tidak dapat dibatalkan.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Ya, hapus!',
+        cancelButtonText: 'Batal'
+    });
+
+    if (result.isConfirmed) {
+        const { error } = await supabase.from('kategori').delete().eq('id', id);
+        
+        if (error) {
+            // --- GANTI alert() dengan Swal.fire() untuk error ---
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: `Gagal menghapus kategori. Mungkin kategori ini masih digunakan dalam transaksi.`,
+            });
+            console.error("Gagal menghapus data:", error);
+        } else {
+            // --- TAMBAHKAN notifikasi sukses ---
+            Swal.fire(
+                'Dihapus!',
+                `Kategori "${nama}" telah berhasil dihapus.`,
+                'success'
+            );
+            fetchAndRenderKategori();
+        }
     }
 }
 
@@ -120,9 +166,13 @@ kategoriForm.addEventListener('submit', handleFormSubmit);
 
 kategoriTbody.addEventListener('click', (event) => {
     const target = event.target;
-    if (target.classList.contains('btn-edit')) {
-        openModal('edit', { ...target.dataset });
-    } else if (target.classList.contains('btn-delete')) {
-        handleDeleteClick(target.dataset.id);
+    // Pastikan target adalah button, bukan elemen di dalamnya
+    const button = target.closest('button'); 
+    if (!button) return;
+
+    if (button.classList.contains('btn-edit')) {
+        openModal('edit', { ...button.dataset });
+    } else if (button.classList.contains('btn-delete')) {
+        handleDeleteClick(button.dataset.id, button.dataset.nama);
     }
 });
