@@ -1,28 +1,59 @@
-# DuitQ - Web Log Viewer
+# DuitQ - Admin Dashboard
 
-![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
-![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-![Supabase](https://img.shields.io/badge/Supabase-Frontend_Integration-green?style=for-the-badge&logo=supabase)
+![alt text](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
 
-DuitQ - History adalah antarmuka web statis yang sederhana dan aman untuk menampilkan log aktivitas dari [DuitQ WhatsApp Cashflow Bot](https://github.com/fahroediin/whatsapp-cashflow-bot). Halaman ini menampilkan data dari Supabase dalam format tabel yang mudah dibaca.
+![alt text](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+
+![alt text](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+
+![alt text](https://img.shields.io/badge/Supabase-Full_Backend-3ECF8E?style=for-the-badge&logo=supabase)
+
+![alt text](https://img.shields.io/badge/Chart.js-FF6384?style=for-the-badge&logo=chartdotjs&logoColor=white)
+DuitQ Admin Dashboard adalah antarmuka web administratif yang komprehensif untuk mengelola dan memvisualisasikan data dari DuitQ WhatsApp Cashflow Bot. Dashboard ini menyediakan alat untuk memantau keuangan, mengelola data master, dan melihat log aktivitas secara terpusat, ditenagai oleh Supabase sebagai backend.
 
 ---
 
 ## ✨ Fitur
 
-- 🔒 **Halaman Login Aman**  
-  Akses dilindungi oleh sistem autentikasi Supabase.
-- 📈 **Tampilan Log Real-time**  
-  Memantau interaksi pengguna dengan bot secara langsung.
-- 📱 **Desain Responsif**  
-  Tampilan optimal untuk desktop maupun perangkat mobile.
-- 🚀 **Ringan dan Cepat**  
-  Dibuat dengan HTML, CSS, dan JavaScript murni (tanpa framework).
+✨ Fitur Unggulan
+- 🔒 Sistem Autentikasi Aman
+Akses dashboard dilindungi oleh sistem autentikasi email dan password dari Supabase.
+- 📊 Dashboard Analitik Interaktif
+Lihat ringkasan keuangan (Pemasukan, Pengeluaran, Saldo) dalam bentuk Kartu KPI dan visualisasikan rincian pengeluaran per kategori dengan diagram lingkaran (pie chart).
+- 🔄 Manajemen Transaksi
+Lihat dan filter seluruh riwayat transaksi yang tercatat oleh pengguna bot.
+- 🗂️ Manajemen Kategori (CRUD)
+Tambah, lihat, edit, dan hapus kategori pemasukan (INCOME) dan pengeluaran (EXPENSE) langsung dari dashboard.
+- 👥 Manajemen Pengguna
+Lihat daftar pengguna bot, atur pengguna default untuk filter, dan hapus pengguna beserta data terkaitnya (khusus admin).
+- 📜 Log Aktivitas
+Pantau interaksi pengguna dengan bot secara real-time untuk keperluan debugging atau monitoring.
+- 🔍 Filter Data Dinamis
+Filter data pada dashboard, transaksi, dan log berdasarkan pengguna dan periode waktu (hari ini, minggu ini, bulan ini, tahun ini).
+- 📱 Desain Responsif
+Tampilan yang dioptimalkan untuk kenyamanan penggunaan di desktop maupun perangkat mobile.
+- 🚀 Ringan dan Cepat
+Dibuat dengan HTML, CSS, dan JavaScript murni untuk performa maksimal tanpa framework yang berat.
 - 🌐 **Mudah Dihosting**  
   Dapat di-deploy di hosting statis atau VPS (dengan Nginx).
 
 ---
+
+## 🏗️ Struktur Proyek
+Proyek ini memiliki struktur file yang modular untuk kemudahan pengelolaan:
+```
+/
+├── index.html
+├── style.css
+├── js/
+│   ├── app.js         # Logika utama, routing, dan otentikasi
+│   ├── config.js      # Konfigurasi koneksi Supabase
+│   ├── dashboard.js   # Logika untuk halaman dashboard (KPI & Chart)
+│   ├── transaksi.js   # Logika untuk halaman manajemen transaksi
+│   ├── kategori.js    # Logika CRUD untuk manajemen kategori
+│   └── pengguna.js    # Logika untuk halaman manajemen pengguna
+
+```
 
 ## 🚀 Panduan Instalasi & Deployment (AlmaLinux + Nginx)
 
