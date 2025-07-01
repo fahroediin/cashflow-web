@@ -6,9 +6,8 @@ DuitQ Admin Dashboard adalah antarmuka web administratif yang komprehensif untuk
 
 ---
 
-## ✨ Fitur
+## ✨ Fitur Unggulan
 
-✨ Fitur Unggulan
 - 🔒 Sistem Autentikasi Aman
 Akses dashboard dilindungi oleh sistem autentikasi email dan password dari Supabase.
 - 📊 Dashboard Analitik Interaktif
