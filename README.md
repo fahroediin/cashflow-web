@@ -1,14 +1,7 @@
 # DuitQ - Admin Dashboard
 
-![alt text](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![alt text](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)![alt text](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)![alt text](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)![alt text](https://img.shields.io/badge/Supabase-Full_Backend-3ECF8E?style=for-the-badge&logo=supabase)![alt text](https://img.shields.io/badge/Chart.js-FF6384?style=for-the-badge&logo=chartdotjs&logoColor=white)
 
-![alt text](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
-
-![alt text](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-
-![alt text](https://img.shields.io/badge/Supabase-Full_Backend-3ECF8E?style=for-the-badge&logo=supabase)
-
-![alt text](https://img.shields.io/badge/Chart.js-FF6384?style=for-the-badge&logo=chartdotjs&logoColor=white)
 DuitQ Admin Dashboard adalah antarmuka web administratif yang komprehensif untuk mengelola dan memvisualisasikan data dari DuitQ WhatsApp Cashflow Bot. Dashboard ini menyediakan alat untuk memantau keuangan, mengelola data master, dan melihat log aktivitas secara terpusat, ditenagai oleh Supabase sebagai backend.
 
 ---
