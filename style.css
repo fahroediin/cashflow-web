@@ -133,7 +133,16 @@ td:first-child { white-space: nowrap; }
 .chart-container { background-color: var(--card-color); padding: 20px; border-radius: 8px; position: relative; }
 .chart-container h3 { text-align: center; margin-top: 0; margin-bottom: 25px; }
 #chart-no-data { text-align: center; color: #888; font-style: italic; }
+/* Style tambahan untuk card saldo total */
+.total-saldo-card {
+    grid-column: 1 / -1; /* Membuat card ini full-width di grid */
+    border-left-color: #f59e0b; /* Warna kuning agar beda */
+    text-align: center;
+}
 
+.total-saldo-card p {
+    font-size: 36px; /* Lebih besar agar menonjol */
+}
 /* === RESPONSIVE === */
 @media screen and (max-width: 768px) {
     body { padding: 10px; }

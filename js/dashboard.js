@@ -1,4 +1,4 @@
-// js/dashboard.js (Versi Revisi Final)
+// js/dashboard.js (Versi dengan Saldo Pengguna)
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- ELEMEN DOM DASHBOARD ---
@@ -6,11 +6,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const periodFilter = document.getElementById('period-filter');
     const totalPemasukanEl = document.getElementById('total-pemasukan');
     const totalPengeluaranEl = document.getElementById('total-pengeluaran');
-    const saldoAkhirEl = document.getElementById('saldo-akhir');
+    const selisihPeriodeEl = document.getElementById('saldo-akhir'); // Diubah namanya agar lebih jelas
+    const totalSaldoPenggunaEl = document.getElementById('total-saldo-pengguna'); // Elemen baru
+    const totalSaldoCard = document.querySelector('.total-saldo-card'); // Card baru
     const expenseChartCanvas = document.getElementById('expense-chart');
     const chartNoDataEl = document.getElementById('chart-no-data');
 
-    // Elemen baru untuk toggle view
+    // Elemen untuk toggle view
     const kpiViewBtn = document.getElementById('kpi-view-btn');
     const chartViewBtn = document.getElementById('chart-view-btn');
     const kpiViewContainer = document.getElementById('kpi-view-container');
@@ -32,8 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- FUNGSI UTAMA ---
-
-    // Fungsi baru untuk mengatur tampilan dashboard
     function showDashboardView(view) {
         kpiViewBtn.classList.remove('active');
         chartViewBtn.classList.remove('active');
@@ -51,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function populateAndSetUserFilter() {
         if (userFilter.options.length > 1) {
-            // Cukup set nilainya dari localStorage
             const defaultUserId = localStorage.getItem('defaultUserId') || '006d7ce0-335d-41d1-a0e8-7dc93ee58eaa';
             userFilter.value = defaultUserId;
             return;
@@ -66,21 +65,22 @@ document.addEventListener('DOMContentLoaded', () => {
             userFilter.appendChild(option);
         });
         
-        // Mengambil dari localStorage atau menggunakan fallback
         const defaultUserId = localStorage.getItem('defaultUserId') || '006d7ce0-335d-41d1-a0e8-7dc93ee58eaa';
         userFilter.value = defaultUserId;
-        periodFilter.value = "hari_ini";
+        periodFilter.value = "bulan_ini"; // Default ke bulan ini agar lebih relevan
     }
 
     async function updateDashboard() {
         totalPemasukanEl.textContent = 'Memuat...';
         totalPengeluaranEl.textContent = 'Memuat...';
-        saldoAkhirEl.textContent = 'Memuat...';
+        selisihPeriodeEl.textContent = 'Memuat...';
+        totalSaldoPenggunaEl.textContent = 'Memuat...';
         
         const selectedUserId = userFilter.value;
         const selectedPeriod = periodFilter.value;
         const { startDate, endDate } = getPeriodDates(selectedPeriod);
 
+        // --- PENGAMBILAN DATA TRANSAKSI (PERIODE) ---
         let query = supabase.from('transaksi').select('nominal, kategori(nama_kategori, tipe)').gte('tanggal', startDate.toISOString()).lte('tanggal', endDate.toISOString());
         if (selectedUserId && selectedUserId !== 'semua') { query = query.eq('id_user', selectedUserId); }
         const { data, error } = await query;
@@ -96,8 +96,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         totalPemasukanEl.textContent = formatCurrency(totalIncome);
         totalPengeluaranEl.textContent = formatCurrency(totalExpense);
-        saldoAkhirEl.textContent = formatCurrency(totalIncome - totalExpense);
+        selisihPeriodeEl.textContent = formatCurrency(totalIncome - totalExpense);
         renderExpenseChart(expenseByCategory);
+
+        // --- PENGAMBILAN DATA SALDO TOTAL PENGGUNA ---
+        if (selectedUserId && selectedUserId !== 'semua') {
+            totalSaldoCard.classList.remove('hidden'); // Tampilkan card saldo
+            const { data: userData, error: userError } = await supabase
+                .from('users')
+                .select('saldo')
+                .eq('id', selectedUserId)
+                .single();
+            
+            if (userError) {
+                console.error('Gagal mengambil saldo pengguna:', userError);
+                totalSaldoPenggunaEl.textContent = 'Error';
+            } else {
+                totalSaldoPenggunaEl.textContent = formatCurrency(userData.saldo || 0);
+            }
+        } else {
+            // Jika "Semua User" dipilih, sembunyikan card saldo total
+            totalSaldoCard.classList.add('hidden');
+        }
     }
     
     function renderExpenseChart(data) {
@@ -122,9 +142,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.initializeDashboard = async () => {
-        showDashboardView('kpi'); // Set tampilan default ke KPI
-        await populateAndSetUserFilter(); // Isi filter dan set default
-        await updateDashboard(); // Baru update dashboard setelah filter siap
+        showDashboardView('kpi');
+        await populateAndSetUserFilter();
+        await updateDashboard();
     };
 
     userFilter.addEventListener('change', updateDashboard);
