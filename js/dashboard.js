@@ -1,4 +1,4 @@
-// js/dashboard.js (Versi dengan Saldo Pengguna)
+// js/dashboard.js (Versi dengan Promise.all untuk Loading yang Konsisten & Cepat)
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- ELEMEN DOM DASHBOARD ---
@@ -6,9 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const periodFilter = document.getElementById('period-filter');
     const totalPemasukanEl = document.getElementById('total-pemasukan');
     const totalPengeluaranEl = document.getElementById('total-pengeluaran');
-    const selisihPeriodeEl = document.getElementById('saldo-akhir'); // Diubah namanya agar lebih jelas
-    const totalSaldoPenggunaEl = document.getElementById('total-saldo-pengguna'); // Elemen baru
-    const totalSaldoCard = document.querySelector('.total-saldo-card'); // Card baru
+    const selisihPeriodeEl = document.getElementById('saldo-akhir');
+    const totalSaldoPenggunaEl = document.getElementById('total-saldo-pengguna');
+    const totalSaldoCard = document.querySelector('.total-saldo-card');
     const expenseChartCanvas = document.getElementById('expense-chart');
     const chartNoDataEl = document.getElementById('chart-no-data');
 
@@ -67,10 +67,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const defaultUserId = localStorage.getItem('defaultUserId') || '006d7ce0-335d-41d1-a0e8-7dc93ee58eaa';
         userFilter.value = defaultUserId;
-        periodFilter.value = "bulan_ini"; // Default ke bulan ini agar lebih relevan
+        periodFilter.value = "bulan_ini";
     }
 
+    // === FUNGSI INI SEPENUHNYA DIPERBARUI ===
     async function updateDashboard() {
+        // 1. Atur semua UI ke status "Memuat..." SEGERA
         totalPemasukanEl.textContent = 'Memuat...';
         totalPengeluaranEl.textContent = 'Memuat...';
         selisihPeriodeEl.textContent = 'Memuat...';
@@ -80,43 +82,62 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedPeriod = periodFilter.value;
         const { startDate, endDate } = getPeriodDates(selectedPeriod);
 
-        // --- PENGAMBILAN DATA TRANSAKSI (PERIODE) ---
-        let query = supabase.from('transaksi').select('nominal, kategori(nama_kategori, tipe)').gte('tanggal', startDate.toISOString()).lte('tanggal', endDate.toISOString());
-        if (selectedUserId && selectedUserId !== 'semua') { query = query.eq('id_user', selectedUserId); }
-        const { data, error } = await query;
+        // 2. Siapkan SEMUA promise query yang dibutuhkan
+        let transactionQuery = supabase.from('transaksi')
+            .select('nominal, kategori(nama_kategori, tipe)')
+            .gte('tanggal', startDate.toISOString())
+            .lte('tanggal', endDate.toISOString());
 
-        if (error) { console.error('Gagal mengambil data transaksi:', error); totalPemasukanEl.textContent = 'Error'; return; }
-
-        let totalIncome = 0, totalExpense = 0;
-        const expenseByCategory = {};
-        data.forEach(tx => {
-            if (tx.kategori && tx.kategori.tipe === 'INCOME') { totalIncome += tx.nominal; } 
-            else if (tx.kategori && tx.kategori.tipe === 'EXPENSE') { totalExpense += tx.nominal; const categoryName = tx.kategori.nama_kategori; expenseByCategory[categoryName] = (expenseByCategory[categoryName] || 0) + tx.nominal; }
-        });
-
-        totalPemasukanEl.textContent = formatCurrency(totalIncome);
-        totalPengeluaranEl.textContent = formatCurrency(totalExpense);
-        selisihPeriodeEl.textContent = formatCurrency(totalIncome - totalExpense);
-        renderExpenseChart(expenseByCategory);
-
-        // --- PENGAMBILAN DATA SALDO TOTAL PENGGUNA ---
         if (selectedUserId && selectedUserId !== 'semua') {
-            totalSaldoCard.classList.remove('hidden'); // Tampilkan card saldo
-            const { data: userData, error: userError } = await supabase
-                .from('users')
-                .select('saldo')
-                .eq('id', selectedUserId)
-                .single();
-            
-            if (userError) {
-                console.error('Gagal mengambil saldo pengguna:', userError);
-                totalSaldoPenggunaEl.textContent = 'Error';
-            } else {
-                totalSaldoPenggunaEl.textContent = formatCurrency(userData.saldo || 0);
-            }
+            transactionQuery = transactionQuery.eq('id_user', selectedUserId);
+        }
+
+        let userSaldoQuery;
+        if (selectedUserId && selectedUserId !== 'semua') {
+            totalSaldoCard.classList.remove('hidden');
+            userSaldoQuery = supabase.from('users').select('saldo').eq('id', selectedUserId).single();
         } else {
-            // Jika "Semua User" dipilih, sembunyikan card saldo total
             totalSaldoCard.classList.add('hidden');
+            // Buat promise palsu yang langsung selesai jika tidak butuh data saldo
+            userSaldoQuery = Promise.resolve({ data: null, error: null });
+        }
+        
+        // 3. Jalankan semua query secara PARALEL dan tunggu semuanya selesai
+        const [transactionResult, userSaldoResult] = await Promise.all([
+            transactionQuery,
+            userSaldoQuery
+        ]);
+
+        // 4. Proses hasil dari query transaksi
+        if (transactionResult.error) {
+            console.error('Gagal mengambil data transaksi:', transactionResult.error);
+            totalPemasukanEl.textContent = 'Error';
+            totalPengeluaranEl.textContent = 'Error';
+            selisihPeriodeEl.textContent = 'Error';
+        } else {
+            let totalIncome = 0, totalExpense = 0;
+            const expenseByCategory = {};
+            transactionResult.data.forEach(tx => {
+                if (tx.kategori?.tipe === 'INCOME') { totalIncome += tx.nominal; } 
+                else if (tx.kategori?.tipe === 'EXPENSE') { 
+                    totalExpense += tx.nominal;
+                    const categoryName = tx.kategori.nama_kategori;
+                    expenseByCategory[categoryName] = (expenseByCategory[categoryName] || 0) + tx.nominal;
+                }
+            });
+
+            totalPemasukanEl.textContent = formatCurrency(totalIncome);
+            totalPengeluaranEl.textContent = formatCurrency(totalExpense);
+            selisihPeriodeEl.textContent = formatCurrency(totalIncome - totalExpense);
+            renderExpenseChart(expenseByCategory);
+        }
+
+        // 5. Proses hasil dari query saldo pengguna
+        if (userSaldoResult.error) {
+            console.error('Gagal mengambil saldo pengguna:', userSaldoResult.error);
+            totalSaldoPenggunaEl.textContent = 'Error';
+        } else if (userSaldoResult.data) {
+            totalSaldoPenggunaEl.textContent = formatCurrency(userSaldoResult.data.saldo || 0);
         }
     }
     
