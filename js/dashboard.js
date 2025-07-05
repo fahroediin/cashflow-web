@@ -1,4 +1,4 @@
-// js/dashboard.js (Versi dengan Promise.all untuk Loading yang Konsisten & Cepat)
+// js/dashboard.js (Versi Final dengan Pengecekan Keamanan Tambahan)
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- ELEMEN DOM DASHBOARD ---
@@ -70,9 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
         periodFilter.value = "bulan_ini";
     }
 
-    // === FUNGSI INI SEPENUHNYA DIPERBARUI ===
     async function updateDashboard() {
-        // 1. Atur semua UI ke status "Memuat..." SEGERA
+        // 1. Atur semua UI ke status "Memuat..."
         totalPemasukanEl.textContent = 'Memuat...';
         totalPengeluaranEl.textContent = 'Memuat...';
         selisihPeriodeEl.textContent = 'Memuat...';
@@ -82,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedPeriod = periodFilter.value;
         const { startDate, endDate } = getPeriodDates(selectedPeriod);
 
-        // 2. Siapkan SEMUA promise query yang dibutuhkan
+        // 2. Siapkan semua promise query
         let transactionQuery = supabase.from('transaksi')
             .select('nominal, kategori(nama_kategori, tipe)')
             .gte('tanggal', startDate.toISOString())
@@ -98,28 +97,37 @@ document.addEventListener('DOMContentLoaded', () => {
             userSaldoQuery = supabase.from('users').select('saldo').eq('id', selectedUserId).single();
         } else {
             totalSaldoCard.classList.add('hidden');
-            // Buat promise palsu yang langsung selesai jika tidak butuh data saldo
             userSaldoQuery = Promise.resolve({ data: null, error: null });
         }
         
-        // 3. Jalankan semua query secara PARALEL dan tunggu semuanya selesai
+        // 3. Jalankan semua query secara paralel
         const [transactionResult, userSaldoResult] = await Promise.all([
             transactionQuery,
             userSaldoQuery
         ]);
 
-        // 4. Proses hasil dari query transaksi
+        // 4. Proses hasil query transaksi
         if (transactionResult.error) {
             console.error('Gagal mengambil data transaksi:', transactionResult.error);
             totalPemasukanEl.textContent = 'Error';
             totalPengeluaranEl.textContent = 'Error';
             selisihPeriodeEl.textContent = 'Error';
         } else {
-            let totalIncome = 0, totalExpense = 0;
+            let totalIncome = 0;
+            let totalExpense = 0;
             const expenseByCategory = {};
+            
             transactionResult.data.forEach(tx => {
-                if (tx.kategori?.tipe === 'INCOME') { totalIncome += tx.nominal; } 
-                else if (tx.kategori?.tipe === 'EXPENSE') { 
+                // === PENYEMPURNAAN DI SINI ===
+                // Cek dulu apakah relasi 'kategori' ada sebelum memprosesnya
+                if (!tx.kategori) {
+                    console.warn('Transaksi tanpa kategori ditemukan:', tx);
+                    return; // Lewati transaksi ini
+                }
+                
+                if (tx.kategori.tipe === 'INCOME') { 
+                    totalIncome += tx.nominal; 
+                } else if (tx.kategori.tipe === 'EXPENSE') { 
                     totalExpense += tx.nominal;
                     const categoryName = tx.kategori.nama_kategori;
                     expenseByCategory[categoryName] = (expenseByCategory[categoryName] || 0) + tx.nominal;
@@ -132,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderExpenseChart(expenseByCategory);
         }
 
-        // 5. Proses hasil dari query saldo pengguna
+        // 5. Proses hasil query saldo pengguna
         if (userSaldoResult.error) {
             console.error('Gagal mengambil saldo pengguna:', userSaldoResult.error);
             totalSaldoPenggunaEl.textContent = 'Error';
