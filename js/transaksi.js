@@ -1,7 +1,6 @@
-// js/transaksi.js (Versi dengan Filter Kategori)
+// js/transaksi.js (Versi dengan Filter Kategori Berkelompok)
 document.addEventListener('DOMContentLoaded', () => {
     const userFilter = document.getElementById('transaksi-user-filter');
-    // --- PERUBAHAN: Tambahkan elemen filter kategori ---
     const kategoriFilter = document.getElementById('transaksi-kategori-filter');
     const transaksiTbody = document.getElementById('transaksi-tbody');
     
@@ -30,18 +29,42 @@ document.addEventListener('DOMContentLoaded', () => {
         userFilter.value = defaultUserId;
     }
 
-    // --- FUNGSI BARU: Untuk mengisi filter kategori ---
+    // --- FUNGSI DIPERBARUI: Untuk membuat dropdown dengan <optgroup> ---
     async function populateKategoriFilter() {
         if (kategoriFilter.options.length <= 1) {
-            const { data, error } = await supabase.from('kategori').select('id, nama_kategori').order('nama_kategori');
+            const { data, error } = await supabase.from('kategori').select('id, nama_kategori, tipe').order('tipe').order('nama_kategori');
             if (error) { console.error('Gagal mengambil data kategori:', error); return; }
+            
+            // Kosongkan filter dan tambahkan opsi default
             kategoriFilter.innerHTML = '<option value="semua">Semua Kategori</option>';
+
+            // Buat elemen optgroup
+            const incomeGroup = document.createElement('optgroup');
+            incomeGroup.label = 'INCOME';
+
+            const expenseGroup = document.createElement('optgroup');
+            expenseGroup.label = 'EXPENSE';
+
+            // Pisahkan data ke dalam grup masing-masing
             data.forEach(kategori => {
                 const option = document.createElement('option');
                 option.value = kategori.id;
                 option.textContent = kategori.nama_kategori;
-                kategoriFilter.appendChild(option);
+
+                if (kategori.tipe === 'INCOME') {
+                    incomeGroup.appendChild(option);
+                } else if (kategori.tipe === 'EXPENSE') {
+                    expenseGroup.appendChild(option);
+                }
             });
+
+            // Tambahkan grup ke dalam select jika grup tersebut tidak kosong
+            if (incomeGroup.children.length > 0) {
+                kategoriFilter.appendChild(incomeGroup);
+            }
+            if (expenseGroup.children.length > 0) {
+                kategoriFilter.appendChild(expenseGroup);
+            }
         }
         kategoriFilter.value = 'semua'; // Set default ke "Semua Kategori"
     }
@@ -54,7 +77,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const to = from + rowsPerPage - 1;
 
         const selectedUserId = userFilter.value;
-        // --- PERUBAHAN: Ambil nilai dari filter kategori ---
         const selectedKategoriId = kategoriFilter.value;
 
         let query = supabase.from('transaksi')
@@ -62,11 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
             .order('tanggal', { ascending: false })
             .range(from, to);
 
-        // Terapkan filter user
         if (selectedUserId && selectedUserId !== 'semua') {
             query = query.eq('id_user', selectedUserId);
         }
-        // --- PERUBAHAN: Terapkan filter kategori ---
         if (selectedKategoriId && selectedKategoriId !== 'semua') {
             query = query.eq('id_kategori', selectedKategoriId);
         }
@@ -82,7 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         transaksiTbody.innerHTML = data.length === 0 ? '<tr><td colspan="5">Tidak ada transaksi.</td></tr>' : data.map(tx => {
             const tanggal = new Date(tx.tanggal).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
-            // Pastikan tx.kategori tidak null sebelum diakses
             const kategoriNama = tx.kategori ? tx.kategori.nama_kategori : 'Tanpa Kategori';
             const kategoriTipe = tx.kategori ? tx.kategori.tipe : '-';
             return `
@@ -111,15 +130,13 @@ document.addEventListener('DOMContentLoaded', () => {
         nextButton.disabled = currentPage >= totalPages;
     }
 
-    // --- PERUBAHAN: Panggil fungsi populateKategoriFilter ---
     window.initializeTransaksiPage = async () => {
         await populateAndSetUserFilter();
-        await populateKategoriFilter(); // Panggil fungsi baru di sini
+        await populateKategoriFilter();
         fetchTransaksi(1);
     };
 
     userFilter.addEventListener('change', () => fetchTransaksi(1));
-    // --- EVENT LISTENER BARU: Untuk filter kategori ---
     kategoriFilter.addEventListener('change', () => fetchTransaksi(1));
 
     prevButton.addEventListener('click', () => {
