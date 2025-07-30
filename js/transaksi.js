@@ -1,4 +1,4 @@
-// js/transaksi.js (Versi Perbaikan Paginasi)
+// js/transaksi.js (Versi Perbaikan Filter Default)
 document.addEventListener('DOMContentLoaded', () => {
     const userFilter = document.getElementById('transaksi-user-filter');
     const transaksiTbody = document.getElementById('transaksi-tbody');
@@ -13,22 +13,20 @@ document.addEventListener('DOMContentLoaded', () => {
     function formatCurrency(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value); }
 
     async function populateAndSetUserFilter() {
-        if (userFilter.options.length > 1) {
-            const defaultUserId = localStorage.getItem('defaultUserId') || 'semua';
-            userFilter.value = defaultUserId;
-            return;
+        // PERBAIKAN: Cek apakah filter sudah terisi
+        if (userFilter.options.length <= 1) {
+            const { data, error } = await supabase.from('users').select('id, nama').order('nama');
+            if (error) { console.error('Gagal mengambil data user:', error); return; }
+            userFilter.innerHTML = '<option value="semua">Semua User</option>';
+            data.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = user.nama;
+                userFilter.appendChild(option);
+            });
         }
 
-        const { data, error } = await supabase.from('users').select('id, nama').order('nama');
-        if (error) { console.error('Gagal mengambil data user:', error); return; }
-        userFilter.innerHTML = '<option value="semua">Semua User</option>';
-        data.forEach(user => {
-            const option = document.createElement('option');
-            option.value = user.id;
-            option.textContent = user.nama;
-            userFilter.appendChild(option);
-        });
-
+        // PERBAIKAN: Logika untuk set nilai default
         const defaultUserId = localStorage.getItem('defaultUserId') || 'semua';
         userFilter.value = defaultUserId;
     }

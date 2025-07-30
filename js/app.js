@@ -1,4 +1,4 @@
-// js/app.js (Versi Perbaikan Paginasi)
+// js/app.js (Versi Perbaikan Filter Default)
 document.addEventListener('DOMContentLoaded', () => {
     const loginContainer = document.getElementById('login-container');
     const appContainer = document.getElementById('app-container');
@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const navPenggunaButton = document.getElementById('nav-pengguna');
     const logUserFilter = document.getElementById('log-user-filter');
 
-    // --- PAGINASI LOG ---
     const logsPagination = document.getElementById('logs-pagination');
     const logsPrevButton = logsPagination.querySelector('.btn-prev');
     const logsNextButton = logsPagination.querySelector('.btn-next');
@@ -27,12 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const rowsPerPage = 10;
 
     async function showView(viewName) {
-        // Sembunyikan semua container
         [dashboardContainer, transaksiContainer, logsContainer, kategoriContainer, penggunaContainer].forEach(c => c.classList.add('hidden'));
-        // Non-aktifkan semua tombol navigasi
         [navDashboardButton, navTransaksiButton, navLogsButton, navKategoriButton, navPenggunaButton].forEach(b => b.classList.remove('active'));
 
-        // Tampilkan view yang dipilih dan panggil fungsi inisialisasinya
         if (viewName === 'dashboard') {
             dashboardContainer.classList.remove('hidden');
             navDashboardButton.classList.add('active');
@@ -44,9 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (viewName === 'logs') {
             logsContainer.classList.remove('hidden');
             navLogsButton.classList.add('active');
-            // Inisialisasi halaman log (filter dan fetch data awal)
             await populateAndSetLogUserFilter();
-            fetchLogs(1); // Panggil fetchLogs dengan halaman 1
+            fetchLogs(1);
         } else if (viewName === 'kategori') {
             kategoriContainer.classList.remove('hidden');
             navKategoriButton.classList.add('active');
@@ -62,20 +57,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function showAppView() { loginContainer.classList.add('hidden'); appContainer.classList.remove('hidden'); showView('dashboard'); }
     
     async function populateAndSetLogUserFilter() {
-        if (logUserFilter.options.length > 1) {
-            const defaultUserId = localStorage.getItem('defaultUserId') || 'semua';
-            logUserFilter.value = defaultUserId;
-            return;
+        // PERBAIKAN: Cek apakah filter sudah terisi
+        if (logUserFilter.options.length <= 1) {
+            const { data, error } = await supabase.from('users').select('id, nama').order('nama');
+            if (error) { console.error('Gagal mengambil data user untuk log:', error); return; }
+            logUserFilter.innerHTML = '<option value="semua">Semua User</option>';
+            data.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = user.nama;
+                logUserFilter.appendChild(option);
+            });
         }
-        const { data, error } = await supabase.from('users').select('id, nama').order('nama');
-        if (error) { console.error('Gagal mengambil data user untuk log:', error); return; }
-        logUserFilter.innerHTML = '<option value="semua">Semua User</option>';
-        data.forEach(user => {
-            const option = document.createElement('option');
-            option.value = user.id;
-            option.textContent = user.nama;
-            logUserFilter.appendChild(option);
-        });
+        // PERBAIKAN: Logika untuk set nilai default
         const defaultUserId = localStorage.getItem('defaultUserId') || 'semua';
         logUserFilter.value = defaultUserId;
     }

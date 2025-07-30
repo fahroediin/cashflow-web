@@ -1,12 +1,10 @@
-// js/dashboard.js (Versi Final dengan 3 Card & Saldo Total)
-
+// js/dashboard.js (Versi Perbaikan Filter Default)
 document.addEventListener('DOMContentLoaded', () => {
-    // --- ELEMEN DOM DASHBOARD ---
     const userFilter = document.getElementById('user-filter');
     const periodFilter = document.getElementById('period-filter');
     const totalPemasukanEl = document.getElementById('total-pemasukan');
     const totalPengeluaranEl = document.getElementById('total-pengeluaran');
-    const saldoAkhirEl = document.getElementById('saldo-akhir'); // Elemen ini sekarang untuk SALDO TOTAL
+    const saldoAkhirEl = document.getElementById('saldo-akhir');
     const expenseChartCanvas = document.getElementById('expense-chart');
     const chartNoDataEl = document.getElementById('chart-no-data');
 
@@ -17,7 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let expenseChart; 
 
-    // --- FUNGSI HELPER ---
     function formatCurrency(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value); }
     function getPeriodDates(period) {
         const now = new Date();
@@ -30,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return { startDate, endDate };
     }
 
-    // --- FUNGSI UTAMA ---
     function showDashboardView(view) {
         kpiViewBtn.classList.remove('active');
         chartViewBtn.classList.remove('active');
@@ -47,28 +43,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function populateAndSetUserFilter() {
-        if (userFilter.options.length > 1) {
-            const defaultUserId = localStorage.getItem('defaultUserId') || '006d7ce0-335d-41d1-a0e8-7dc93ee58eaa';
-            userFilter.value = defaultUserId;
-            return;
+        // PERBAIKAN: Cek apakah filter sudah terisi
+        if (userFilter.options.length <= 1) {
+            const { data, error } = await supabase.from('users').select('id, nama').order('nama');
+            if (error) { console.error('Gagal mengambil data user:', error); return; }
+            userFilter.innerHTML = '<option value="semua">Semua User</option>';
+            data.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = user.nama;
+                userFilter.appendChild(option);
+            });
         }
-        const { data, error } = await supabase.from('users').select('id, nama').order('nama');
-        if (error) { console.error('Gagal mengambil data user:', error); return; }
-        userFilter.innerHTML = '<option value="semua">Semua User</option>';
-        data.forEach(user => {
-            const option = document.createElement('option');
-            option.value = user.id;
-            option.textContent = user.nama;
-            userFilter.appendChild(option);
-        });
         
-        const defaultUserId = localStorage.getItem('defaultUserId') || '006d7ce0-335d-41d1-a0e8-7dc93ee58eaa';
+        // PERBAIKAN: Logika untuk set nilai default
+        const defaultUserId = localStorage.getItem('defaultUserId') || 'semua';
         userFilter.value = defaultUserId;
-        periodFilter.value = "bulan_ini";
+        periodFilter.value = "bulan_ini"; // Default ke bulan ini agar lebih informatif
     }
 
     async function updateDashboard() {
-        // 1. Atur UI ke status "Memuat..."
         totalPemasukanEl.textContent = 'Memuat...';
         totalPengeluaranEl.textContent = 'Memuat...';
         saldoAkhirEl.textContent = 'Memuat...';
@@ -77,62 +71,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedPeriod = periodFilter.value;
         const { startDate, endDate } = getPeriodDates(selectedPeriod);
 
-        // 2. Siapkan promise query
-        let transactionQuery = supabase.from('transaksi')
-            .select('nominal, kategori(nama_kategori, tipe)')
-            .gte('tanggal', startDate.toISOString())
-            .lte('tanggal', endDate.toISOString());
+        let query = supabase.from('transaksi').select('nominal, kategori(nama_kategori, tipe)').gte('tanggal', startDate.toISOString()).lte('tanggal', endDate.toISOString());
+        if (selectedUserId && selectedUserId !== 'semua') { query = query.eq('id_user', selectedUserId); }
+        const { data, error } = await query;
 
-        if (selectedUserId && selectedUserId !== 'semua') {
-            transactionQuery = transactionQuery.eq('id_user', selectedUserId);
-        }
+        if (error) { console.error('Gagal mengambil data transaksi:', error); totalPemasukanEl.textContent = 'Error'; return; }
 
-        // Siapkan query saldo, bahkan untuk "semua user" (akan dihandle nanti)
-        let userSaldoQuery = supabase.from('users').select('saldo');
-        if (selectedUserId && selectedUserId !== 'semua') {
-            userSaldoQuery = userSaldoQuery.eq('id', selectedUserId).single();
-        }
-        
-        // 3. Jalankan query secara paralel
-        const [transactionResult, userSaldoResult] = await Promise.all([
-            transactionQuery,
-            userSaldoQuery
-        ]);
+        let totalIncome = 0, totalExpense = 0;
+        const expenseByCategory = {};
+        data.forEach(tx => {
+            if (tx.kategori && tx.kategori.tipe === 'INCOME') { totalIncome += tx.nominal; } 
+            else if (tx.kategori && tx.kategori.tipe === 'EXPENSE') { totalExpense += tx.nominal; const categoryName = tx.kategori.nama_kategori; expenseByCategory[categoryName] = (expenseByCategory[categoryName] || 0) + tx.nominal; }
+        });
 
-        // 4. Proses hasil query transaksi (untuk 2 card pertama)
-        if (transactionResult.error) {
-            console.error('Gagal mengambil data transaksi:', transactionResult.error);
-            totalPemasukanEl.textContent = 'Error';
-            totalPengeluaranEl.textContent = 'Error';
-        } else {
-            let totalIncome = 0, totalExpense = 0;
-            const expenseByCategory = {};
-            
-            transactionResult.data.forEach(tx => {
-                if (!tx.kategori) return;
-                if (tx.kategori.tipe === 'INCOME') totalIncome += tx.nominal; 
-                else if (tx.kategori.tipe === 'EXPENSE') {
-                    totalExpense += tx.nominal;
-                    expenseByCategory[tx.kategori.nama_kategori] = (expenseByCategory[tx.kategori.nama_kategori] || 0) + tx.nominal;
-                }
-            });
-
-            totalPemasukanEl.textContent = formatCurrency(totalIncome);
-            totalPengeluaranEl.textContent = formatCurrency(totalExpense);
-            renderExpenseChart(expenseByCategory);
-        }
-
-        // 5. Proses hasil query saldo (untuk card "Saldo Total")
-        if (userSaldoResult.error) {
-            console.error('Gagal mengambil saldo pengguna:', userSaldoResult.error);
-            saldoAkhirEl.textContent = 'Error';
-        } else if (selectedUserId && selectedUserId !== 'semua') {
-            // Jika satu user dipilih, tampilkan saldonya
-            saldoAkhirEl.textContent = formatCurrency(userSaldoResult.data?.saldo || 0);
-        } else {
-            // Jika "Semua User" dipilih, tampilkan strip atau pesan
-            saldoAkhirEl.textContent = '-';
-        }
+        totalPemasukanEl.textContent = formatCurrency(totalIncome);
+        totalPengeluaranEl.textContent = formatCurrency(totalExpense);
+        saldoAkhirEl.textContent = formatCurrency(totalIncome - totalExpense);
+        renderExpenseChart(expenseByCategory);
     }
     
     function renderExpenseChart(data) {
