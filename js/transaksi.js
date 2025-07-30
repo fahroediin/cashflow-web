@@ -1,6 +1,8 @@
-// js/transaksi.js (Versi Perbaikan Filter Default)
+// js/transaksi.js (Versi dengan Filter Kategori)
 document.addEventListener('DOMContentLoaded', () => {
     const userFilter = document.getElementById('transaksi-user-filter');
+    // --- PERUBAHAN: Tambahkan elemen filter kategori ---
+    const kategoriFilter = document.getElementById('transaksi-kategori-filter');
     const transaksiTbody = document.getElementById('transaksi-tbody');
     
     const paginationControls = document.getElementById('transaksi-pagination');
@@ -13,7 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function formatCurrency(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value); }
 
     async function populateAndSetUserFilter() {
-        // PERBAIKAN: Cek apakah filter sudah terisi
         if (userFilter.options.length <= 1) {
             const { data, error } = await supabase.from('users').select('id, nama').order('nama');
             if (error) { console.error('Gagal mengambil data user:', error); return; }
@@ -25,10 +26,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 userFilter.appendChild(option);
             });
         }
-
-        // PERBAIKAN: Logika untuk set nilai default
         const defaultUserId = localStorage.getItem('defaultUserId') || 'semua';
         userFilter.value = defaultUserId;
+    }
+
+    // --- FUNGSI BARU: Untuk mengisi filter kategori ---
+    async function populateKategoriFilter() {
+        if (kategoriFilter.options.length <= 1) {
+            const { data, error } = await supabase.from('kategori').select('id, nama_kategori').order('nama_kategori');
+            if (error) { console.error('Gagal mengambil data kategori:', error); return; }
+            kategoriFilter.innerHTML = '<option value="semua">Semua Kategori</option>';
+            data.forEach(kategori => {
+                const option = document.createElement('option');
+                option.value = kategori.id;
+                option.textContent = kategori.nama_kategori;
+                kategoriFilter.appendChild(option);
+            });
+        }
+        kategoriFilter.value = 'semua'; // Set default ke "Semua Kategori"
     }
 
     async function fetchTransaksi(page = 1) {
@@ -39,14 +54,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const to = from + rowsPerPage - 1;
 
         const selectedUserId = userFilter.value;
+        // --- PERUBAHAN: Ambil nilai dari filter kategori ---
+        const selectedKategoriId = kategoriFilter.value;
+
         let query = supabase.from('transaksi')
             .select('*, kategori(nama_kategori, tipe)', { count: 'exact' })
             .order('tanggal', { ascending: false })
             .range(from, to);
 
+        // Terapkan filter user
         if (selectedUserId && selectedUserId !== 'semua') {
             query = query.eq('id_user', selectedUserId);
         }
+        // --- PERUBAHAN: Terapkan filter kategori ---
+        if (selectedKategoriId && selectedKategoriId !== 'semua') {
+            query = query.eq('id_kategori', selectedKategoriId);
+        }
+
         const { data, error, count } = await query;
 
         if (error) { 
@@ -58,11 +82,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         transaksiTbody.innerHTML = data.length === 0 ? '<tr><td colspan="5">Tidak ada transaksi.</td></tr>' : data.map(tx => {
             const tanggal = new Date(tx.tanggal).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+            // Pastikan tx.kategori tidak null sebelum diakses
+            const kategoriNama = tx.kategori ? tx.kategori.nama_kategori : 'Tanpa Kategori';
+            const kategoriTipe = tx.kategori ? tx.kategori.tipe : '-';
             return `
                 <tr>
                     <td data-label="Tanggal"><span>${tanggal}</span></td>
-                    <td data-label="Kategori"><span>${tx.kategori.nama_kategori}</span></td>
-                    <td data-label="Tipe"><span>${tx.kategori.tipe}</span></td>
+                    <td data-label="Kategori"><span>${kategoriNama}</span></td>
+                    <td data-label="Tipe"><span>${kategoriTipe}</span></td>
                     <td data-label="Nominal"><span>${formatCurrency(tx.nominal)}</span></td>
                     <td data-label="Catatan"><span>${tx.catatan || '-'}</span></td>
                 </tr>
@@ -84,12 +111,17 @@ document.addEventListener('DOMContentLoaded', () => {
         nextButton.disabled = currentPage >= totalPages;
     }
 
+    // --- PERUBAHAN: Panggil fungsi populateKategoriFilter ---
     window.initializeTransaksiPage = async () => {
         await populateAndSetUserFilter();
+        await populateKategoriFilter(); // Panggil fungsi baru di sini
         fetchTransaksi(1);
     };
 
     userFilter.addEventListener('change', () => fetchTransaksi(1));
+    // --- EVENT LISTENER BARU: Untuk filter kategori ---
+    kategoriFilter.addEventListener('change', () => fetchTransaksi(1));
+
     prevButton.addEventListener('click', () => {
         if (currentPage > 1) fetchTransaksi(currentPage - 1);
     });
