@@ -1,16 +1,14 @@
-// js/transaksi.js (Versi dengan Paginasi)
+// js/transaksi.js (Versi Perbaikan Paginasi)
 document.addEventListener('DOMContentLoaded', () => {
     const userFilter = document.getElementById('transaksi-user-filter');
     const transaksiTbody = document.getElementById('transaksi-tbody');
     
-    // --- PERUBAHAN PAGINASI ---
     const paginationControls = document.getElementById('transaksi-pagination');
     const prevButton = paginationControls.querySelector('.btn-prev');
     const nextButton = paginationControls.querySelector('.btn-next');
     const pageInfo = paginationControls.querySelector('.page-info');
     let currentPage = 1;
     const rowsPerPage = 10;
-    // --- AKHIR PERUBAHAN ---
 
     function formatCurrency(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value); }
 
@@ -35,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
         userFilter.value = defaultUserId;
     }
 
-    // --- FUNGSI FETCHTRANSAKSI DIPERBARUI UNTUK PAGINASI ---
     async function fetchTransaksi(page = 1) {
         currentPage = page;
         transaksiTbody.innerHTML = '<tr><td colspan="5">Memuat data...</td></tr>';
@@ -45,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const selectedUserId = userFilter.value;
         let query = supabase.from('transaksi')
-            .select('*, kategori(nama_kategori, tipe)', { count: 'exact' }) // Minta total hitungan
+            .select('*, kategori(nama_kategori, tipe)', { count: 'exact' })
             .order('tanggal', { ascending: false })
             .range(from, to);
 
@@ -78,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updatePagination(totalRows) {
-        if (totalRows <= rowsPerPage) {
+        if (!totalRows || totalRows <= rowsPerPage) {
             paginationControls.classList.add('hidden');
             return;
         }
@@ -88,15 +85,13 @@ document.addEventListener('DOMContentLoaded', () => {
         prevButton.disabled = currentPage === 1;
         nextButton.disabled = currentPage >= totalPages;
     }
-    // --- AKHIR PERUBAHAN PAGINASI ---
 
     window.initializeTransaksiPage = async () => {
         await populateAndSetUserFilter();
-        fetchTransaksi(1); // Mulai dari halaman 1
+        fetchTransaksi(1);
     };
 
-    // --- EVENT LISTENER PAGINASI ---
-    userFilter.addEventListener('change', () => fetchTransaksi(1)); // Reset ke halaman 1 saat filter berubah
+    userFilter.addEventListener('change', () => fetchTransaksi(1));
     prevButton.addEventListener('click', () => {
         if (currentPage > 1) fetchTransaksi(currentPage - 1);
     });

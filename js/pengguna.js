@@ -1,16 +1,13 @@
-// js/pengguna.js (Versi dengan Paginasi)
-
+// js/pengguna.js (Versi Perbaikan Paginasi)
 document.addEventListener('DOMContentLoaded', () => {
     const penggunaTbody = document.getElementById('pengguna-tbody');
     
-    // --- PERUBAHAN PAGINASI ---
     const paginationControls = document.getElementById('pengguna-pagination');
     const prevButton = paginationControls.querySelector('.btn-prev');
     const nextButton = paginationControls.querySelector('.btn-next');
     const pageInfo = paginationControls.querySelector('.page-info');
     let currentPage = 1;
     const rowsPerPage = 10;
-    // --- AKHIR PERUBAHAN ---
 
     function updateDefaultButtons() {
         const defaultUserId = localStorage.getItem('defaultUserId') || 'semua';
@@ -54,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     Swal.fire('Gagal!', `Terjadi kesalahan: ${error.message}`, 'error');
                 } else {
                     Swal.fire('Selesai!', data, 'success');
-                    fetchAndRenderPengguna(1); // Kembali ke halaman 1 setelah hapus
+                    fetchAndRenderPengguna(1);
                 }
             } catch (catchError) {
                 console.error("[FATAL] Panggilan RPC gagal total:", catchError);
@@ -69,7 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return session.user.app_metadata.user_role === 'admin';
     }
 
-    // --- FUNGSI FETCH DIPERBARUI UNTUK PAGINASI ---
     async function fetchAndRenderPengguna(page = 1) {
         currentPage = page;
         penggunaTbody.innerHTML = '<tr><td colspan="4">Memuat data...</td></tr>';
@@ -120,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updatePagination(totalRows) {
-        if (totalRows <= rowsPerPage) {
+        if (!totalRows || totalRows <= rowsPerPage) {
             paginationControls.classList.add('hidden');
             return;
         }
@@ -130,10 +126,9 @@ document.addEventListener('DOMContentLoaded', () => {
         prevButton.disabled = currentPage === 1;
         nextButton.disabled = currentPage >= totalPages;
     }
-    // --- AKHIR PERUBAHAN PAGINASI ---
 
     window.initializePenggunaPage = () => {
-        fetchAndRenderPengguna(1); // Mulai dari halaman 1
+        fetchAndRenderPengguna(1);
     };
 
     penggunaTbody.addEventListener('click', (event) => {
@@ -146,7 +141,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- EVENT LISTENER PAGINASI ---
     prevButton.addEventListener('click', () => {
         if (currentPage > 1) fetchAndRenderPengguna(currentPage - 1);
     });

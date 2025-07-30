@@ -1,4 +1,4 @@
-// js/app.js (Versi dengan Paginasi Log)
+// js/app.js (Versi Perbaikan Paginasi)
 document.addEventListener('DOMContentLoaded', () => {
     const loginContainer = document.getElementById('login-container');
     const appContainer = document.getElementById('app-container');
@@ -18,27 +18,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const navPenggunaButton = document.getElementById('nav-pengguna');
     const logUserFilter = document.getElementById('log-user-filter');
 
-    // --- PERUBAHAN PAGINASI LOG ---
+    // --- PAGINASI LOG ---
     const logsPagination = document.getElementById('logs-pagination');
     const logsPrevButton = logsPagination.querySelector('.btn-prev');
     const logsNextButton = logsPagination.querySelector('.btn-next');
     const logsPageInfo = logsPagination.querySelector('.page-info');
     let logsCurrentPage = 1;
     const rowsPerPage = 10;
-    // --- AKHIR PERUBAHAN ---
 
     async function showView(viewName) {
-        dashboardContainer.classList.add('hidden');
-        transaksiContainer.classList.add('hidden');
-        logsContainer.classList.add('hidden');
-        kategoriContainer.classList.add('hidden');
-        penggunaContainer.classList.add('hidden');
-        navDashboardButton.classList.remove('active');
-        navTransaksiButton.classList.remove('active');
-        navLogsButton.classList.remove('active');
-        navKategoriButton.classList.remove('active');
-        navPenggunaButton.classList.remove('active');
+        // Sembunyikan semua container
+        [dashboardContainer, transaksiContainer, logsContainer, kategoriContainer, penggunaContainer].forEach(c => c.classList.add('hidden'));
+        // Non-aktifkan semua tombol navigasi
+        [navDashboardButton, navTransaksiButton, navLogsButton, navKategoriButton, navPenggunaButton].forEach(b => b.classList.remove('active'));
 
+        // Tampilkan view yang dipilih dan panggil fungsi inisialisasinya
         if (viewName === 'dashboard') {
             dashboardContainer.classList.remove('hidden');
             navDashboardButton.classList.add('active');
@@ -50,8 +44,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (viewName === 'logs') {
             logsContainer.classList.remove('hidden');
             navLogsButton.classList.add('active');
+            // Inisialisasi halaman log (filter dan fetch data awal)
             await populateAndSetLogUserFilter();
-            fetchLogs(1); // Mulai dari halaman 1
+            fetchLogs(1); // Panggil fetchLogs dengan halaman 1
         } else if (viewName === 'kategori') {
             kategoriContainer.classList.remove('hidden');
             navKategoriButton.classList.add('active');
@@ -85,7 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
         logUserFilter.value = defaultUserId;
     }
 
-    // --- FUNGSI FETCHLOGS DIPERBARUI UNTUK PAGINASI ---
     async function fetchLogs(page = 1) {
         logsCurrentPage = page;
         logsTbody.innerHTML = '<tr><td colspan="4">Memuat data...</td></tr>';
@@ -95,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const selectedUserId = logUserFilter.value;
         let query = supabase.from('log_aktivitas')
-            .select('*', { count: 'exact' }) // Minta total hitungan
+            .select('*', { count: 'exact' })
             .order('timestamp', { ascending: false })
             .range(from, to);
 
@@ -122,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateLogsPagination(totalRows) {
-        if (totalRows <= rowsPerPage) {
+        if (!totalRows || totalRows <= rowsPerPage) {
             logsPagination.classList.add('hidden');
             return;
         }
@@ -132,7 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
         logsPrevButton.disabled = logsCurrentPage === 1;
         logsNextButton.disabled = logsCurrentPage >= totalPages;
     }
-    // --- AKHIR PERUBAHAN PAGINASI LOG ---
 
     async function handleLogin(e) {
         e.preventDefault();
@@ -159,8 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
     navKategoriButton.addEventListener('click', () => showView('kategori'));
     navPenggunaButton.addEventListener('click', () => showView('pengguna'));
     
-    // --- EVENT LISTENER PAGINASI LOG ---
-    logUserFilter.addEventListener('change', () => fetchLogs(1)); // Reset ke halaman 1 saat filter berubah
+    logUserFilter.addEventListener('change', () => fetchLogs(1));
     logsPrevButton.addEventListener('click', () => {
         if (logsCurrentPage > 1) fetchLogs(logsCurrentPage - 1);
     });
