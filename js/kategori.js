@@ -1,4 +1,4 @@
-// js/kategori.js (Versi dengan SweetAlert2)
+// js/kategori.js (Versi dengan SweetAlert2 dan Paginasi)
 
 // --- ELEMEN DOM ---
 const kategoriTbody = document.getElementById('kategori-tbody');
@@ -13,23 +13,41 @@ const namaKategoriInput = document.getElementById('nama-kategori');
 const tipeKategoriSelect = document.getElementById('tipe-kategori');
 const cancelButton = document.getElementById('cancel-button');
 
+// --- PERUBAHAN PAGINASI ---
+const paginationControls = document.getElementById('kategori-pagination');
+const prevButton = paginationControls.querySelector('.btn-prev');
+const nextButton = paginationControls.querySelector('.btn-next');
+const pageInfo = paginationControls.querySelector('.page-info');
+let currentPage = 1;
+const rowsPerPage = 10;
+// --- AKHIR PERUBAHAN ---
+
 // --- FUNGSI-FUNGSI ---
 
-async function fetchAndRenderKategori() {
+// --- FUNGSI FETCH DIPERBARUI UNTUK PAGINASI ---
+async function fetchAndRenderKategori(page = 1) {
+    currentPage = page;
     kategoriTbody.innerHTML = '<tr><td colspan="3">Memuat data...</td></tr>';
-    const { data, error } = await supabase
+
+    const from = (page - 1) * rowsPerPage;
+    const to = from + rowsPerPage - 1;
+
+    const { data, error, count } = await supabase
         .from('kategori')
-        .select('*')
-        .order('nama_kategori', { ascending: true });
+        .select('*', { count: 'exact' })
+        .order('nama_kategori', { ascending: true })
+        .range(from, to);
 
     if (error) {
         console.error('Error fetching categories:', error);
         kategoriTbody.innerHTML = '<tr><td colspan="3" class="error-text">Gagal memuat data kategori.</td></tr>';
+        paginationControls.classList.add('hidden');
         return;
     }
 
-    if (data.length === 0) {
+    if (count === 0) {
         kategoriTbody.innerHTML = '<tr><td colspan="3">Belum ada kategori.</td></tr>';
+        paginationControls.classList.add('hidden');
         return;
     }
 
@@ -48,7 +66,22 @@ async function fetchAndRenderKategori() {
         `;
         kategoriTbody.appendChild(tr);
     });
+
+    updatePagination(count);
 }
+
+function updatePagination(totalRows) {
+    if (totalRows <= rowsPerPage) {
+        paginationControls.classList.add('hidden');
+        return;
+    }
+    paginationControls.classList.remove('hidden');
+    const totalPages = Math.ceil(totalRows / rowsPerPage);
+    pageInfo.textContent = `Halaman ${currentPage} dari ${totalPages}`;
+    prevButton.disabled = currentPage === 1;
+    nextButton.disabled = currentPage >= totalPages;
+}
+// --- AKHIR PERUBAHAN PAGINASI ---
 
 function openModal(mode, data = {}) {
     kategoriForm.reset();
@@ -79,12 +112,7 @@ async function handleFormSubmit(event) {
     const tipe = tipeKategoriSelect.value;
 
     if (!nama_kategori || !tipe) {
-        // --- GANTI alert() dengan Swal.fire() untuk validasi ---
-        Swal.fire({
-            icon: 'warning',
-            title: 'Data Tidak Lengkap',
-            text: 'Nama kategori dan tipe harus diisi.',
-        });
+        Swal.fire({ icon: 'warning', title: 'Data Tidak Lengkap', text: 'Nama kategori dan tipe harus diisi.' });
         return;
     }
 
@@ -92,36 +120,23 @@ async function handleFormSubmit(event) {
     saveButton.textContent = 'Menyimpan...';
 
     const { error } = id
-        ? await supabase.from('kategori').update({ nama_kategori, tipe }).eq('id', id) // Edit
-        : await supabase.from('kategori').insert([{ nama_kategori, tipe }]); // Tambah
+        ? await supabase.from('kategori').update({ nama_kategori, tipe }).eq('id', id)
+        : await supabase.from('kategori').insert([{ nama_kategori, tipe }]);
 
     saveButton.disabled = false;
     
     if (error) {
-        // --- GANTI alert() dengan Swal.fire() untuk error ---
-        Swal.fire({
-            icon: 'error',
-            title: 'Gagal!',
-            text: `Terjadi kesalahan saat menyimpan data: ${error.message}`,
-        });
+        Swal.fire({ icon: 'error', title: 'Gagal!', text: `Terjadi kesalahan saat menyimpan data: ${error.message}` });
         saveButton.textContent = id ? 'Update' : 'Simpan';
         console.error("Gagal menyimpan data:", error);
     } else {
-        // --- TAMBAHKAN notifikasi sukses ---
-        Swal.fire({
-            icon: 'success',
-            title: 'Berhasil!',
-            text: 'Kategori berhasil disimpan.',
-            showConfirmButton: false,
-            timer: 1500
-        });
+        Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Kategori berhasil disimpan.', showConfirmButton: false, timer: 1500 });
         closeModal();
-        fetchAndRenderKategori();
+        fetchAndRenderKategori(currentPage); // Tetap di halaman saat ini setelah edit/tambah
     }
 }
 
 async function handleDeleteClick(id, nama) {
-    // --- GANTI confirm() dengan Swal.fire() ---
     const result = await Swal.fire({
         title: 'Apakah Anda yakin?',
         text: `Anda akan menghapus kategori "${nama}". Aksi ini tidak dapat dibatalkan.`,
@@ -137,26 +152,20 @@ async function handleDeleteClick(id, nama) {
         const { error } = await supabase.from('kategori').delete().eq('id', id);
         
         if (error) {
-            // --- GANTI alert() dengan Swal.fire() untuk error ---
-            Swal.fire({
-                icon: 'error',
-                title: 'Gagal!',
-                text: `Gagal menghapus kategori. Mungkin kategori ini masih digunakan dalam transaksi.`,
-            });
+            Swal.fire({ icon: 'error', title: 'Gagal!', text: `Gagal menghapus kategori. Mungkin kategori ini masih digunakan dalam transaksi.` });
             console.error("Gagal menghapus data:", error);
         } else {
-            // --- TAMBAHKAN notifikasi sukses ---
-            Swal.fire(
-                'Dihapus!',
-                `Kategori "${nama}" telah berhasil dihapus.`,
-                'success'
-            );
-            fetchAndRenderKategori();
+            Swal.fire('Dihapus!', `Kategori "${nama}" telah berhasil dihapus.`, 'success');
+            fetchAndRenderKategori(1); // Kembali ke halaman 1 setelah hapus
         }
     }
 }
 
 // --- EVENT LISTENERS ---
+window.initializeKategoriPage = () => {
+    fetchAndRenderKategori(1); // Mulai dari halaman 1
+};
+
 addKategoriButton.addEventListener('click', () => openModal('add'));
 cancelButton.addEventListener('click', closeModal);
 modal.addEventListener('click', (event) => {
@@ -166,7 +175,6 @@ kategoriForm.addEventListener('submit', handleFormSubmit);
 
 kategoriTbody.addEventListener('click', (event) => {
     const target = event.target;
-    // Pastikan target adalah button, bukan elemen di dalamnya
     const button = target.closest('button'); 
     if (!button) return;
 
@@ -175,4 +183,12 @@ kategoriTbody.addEventListener('click', (event) => {
     } else if (button.classList.contains('btn-delete')) {
         handleDeleteClick(button.dataset.id, button.dataset.nama);
     }
+});
+
+// --- EVENT LISTENER PAGINASI ---
+prevButton.addEventListener('click', () => {
+    if (currentPage > 1) fetchAndRenderKategori(currentPage - 1);
+});
+nextButton.addEventListener('click', () => {
+    fetchAndRenderKategori(currentPage + 1);
 });

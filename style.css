@@ -134,6 +134,40 @@ td:first-child { white-space: nowrap; }
 .chart-container h3 { text-align: center; margin-top: 0; margin-bottom: 25px; }
 #chart-no-data { text-align: center; color: #888; font-style: italic; }
 
+/* === PAGINATION CONTROLS === */
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.pagination-controls button {
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.pagination-controls button:hover:not(:disabled) {
+    background-color: var(--secondary-color-hover);
+}
+
+.pagination-controls button:disabled {
+    background-color: #333;
+    color: #666;
+    cursor: not-allowed;
+}
+
+.pagination-controls .page-info {
+    font-size: 14px;
+    color: #aaa;
+}
+
 /* === RESPONSIVE === */
 @media screen and (max-width: 768px) {
     body { padding: 10px; }

@@ -1,4 +1,4 @@
-// js/app.js (Versi dengan Semua Halaman Terintegrasi)
+// js/app.js (Versi dengan Paginasi Log)
 document.addEventListener('DOMContentLoaded', () => {
     const loginContainer = document.getElementById('login-container');
     const appContainer = document.getElementById('app-container');
@@ -17,6 +17,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const navKategoriButton = document.getElementById('nav-kategori');
     const navPenggunaButton = document.getElementById('nav-pengguna');
     const logUserFilter = document.getElementById('log-user-filter');
+
+    // --- PERUBAHAN PAGINASI LOG ---
+    const logsPagination = document.getElementById('logs-pagination');
+    const logsPrevButton = logsPagination.querySelector('.btn-prev');
+    const logsNextButton = logsPagination.querySelector('.btn-next');
+    const logsPageInfo = logsPagination.querySelector('.page-info');
+    let logsCurrentPage = 1;
+    const rowsPerPage = 10;
+    // --- AKHIR PERUBAHAN ---
 
     async function showView(viewName) {
         dashboardContainer.classList.add('hidden');
@@ -42,11 +51,11 @@ document.addEventListener('DOMContentLoaded', () => {
             logsContainer.classList.remove('hidden');
             navLogsButton.classList.add('active');
             await populateAndSetLogUserFilter();
-            fetchLogs();
+            fetchLogs(1); // Mulai dari halaman 1
         } else if (viewName === 'kategori') {
             kategoriContainer.classList.remove('hidden');
             navKategoriButton.classList.add('active');
-            fetchAndRenderKategori(); 
+            window.initializeKategoriPage(); 
         } else if (viewName === 'pengguna') {
             penggunaContainer.classList.remove('hidden');
             navPenggunaButton.classList.add('active');
@@ -59,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     async function populateAndSetLogUserFilter() {
         if (logUserFilter.options.length > 1) {
-            const defaultUserId = localStorage.getItem('defaultUserId') || '006d7ce0-335d-41d1-a0e8-7dc93ee58eaa';
+            const defaultUserId = localStorage.getItem('defaultUserId') || 'semua';
             logUserFilter.value = defaultUserId;
             return;
         }
@@ -72,25 +81,58 @@ document.addEventListener('DOMContentLoaded', () => {
             option.textContent = user.nama;
             logUserFilter.appendChild(option);
         });
-        const defaultUserId = localStorage.getItem('defaultUserId') || '006d7ce0-335d-41d1-a0e8-7dc93ee58eaa';
+        const defaultUserId = localStorage.getItem('defaultUserId') || 'semua';
         logUserFilter.value = defaultUserId;
     }
 
-    async function fetchLogs() {
+    // --- FUNGSI FETCHLOGS DIPERBARUI UNTUK PAGINASI ---
+    async function fetchLogs(page = 1) {
+        logsCurrentPage = page;
         logsTbody.innerHTML = '<tr><td colspan="4">Memuat data...</td></tr>';
+        
+        const from = (page - 1) * rowsPerPage;
+        const to = from + rowsPerPage - 1;
+
         const selectedUserId = logUserFilter.value;
-        let query = supabase.from('log_aktivitas').select('*').order('timestamp', { ascending: false }).limit(100);
+        let query = supabase.from('log_aktivitas')
+            .select('*', { count: 'exact' }) // Minta total hitungan
+            .order('timestamp', { ascending: false })
+            .range(from, to);
+
         if (selectedUserId && selectedUserId !== 'semua') {
             query = query.eq('id_user', selectedUserId);
         }
-        const { data, error } = await query;
-        if (error) { console.error('Error fetching logs:', error); logsTbody.innerHTML = '<tr><td colspan="4" class="error-text">Gagal memuat data.</td></tr>'; return; }
+
+        const { data, error, count } = await query;
+
+        if (error) { 
+            console.error('Error fetching logs:', error); 
+            logsTbody.innerHTML = '<tr><td colspan="4" class="error-text">Gagal memuat data.</td></tr>'; 
+            logsPagination.classList.add('hidden');
+            return; 
+        }
+
         logsTbody.innerHTML = data.length === 0 ? '<tr><td colspan="4">Belum ada aktivitas.</td></tr>' : data.map(log => {
             const timestamp = new Date(log.timestamp).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
             const formattedWaNumber = log.user_wa_number ? log.user_wa_number.replace('@c.us', '') : '-';
             return `<tr><td data-label="Waktu"><span>${timestamp}</span></td><td data-label="Nomor WA"><span>${formattedWaNumber}</span></td><td data-label="Aktivitas"><span>${log.aktivitas}</span></td><td data-label="Detail"><span>${log.detail || '-'}</span></td></tr>`;
         }).join('');
+
+        updateLogsPagination(count);
     }
+
+    function updateLogsPagination(totalRows) {
+        if (totalRows <= rowsPerPage) {
+            logsPagination.classList.add('hidden');
+            return;
+        }
+        logsPagination.classList.remove('hidden');
+        const totalPages = Math.ceil(totalRows / rowsPerPage);
+        logsPageInfo.textContent = `Halaman ${logsCurrentPage} dari ${totalPages}`;
+        logsPrevButton.disabled = logsCurrentPage === 1;
+        logsNextButton.disabled = logsCurrentPage >= totalPages;
+    }
+    // --- AKHIR PERUBAHAN PAGINASI LOG ---
 
     async function handleLogin(e) {
         e.preventDefault();
@@ -116,5 +158,13 @@ document.addEventListener('DOMContentLoaded', () => {
     navLogsButton.addEventListener('click', () => showView('logs'));
     navKategoriButton.addEventListener('click', () => showView('kategori'));
     navPenggunaButton.addEventListener('click', () => showView('pengguna'));
-    logUserFilter.addEventListener('change', fetchLogs);
+    
+    // --- EVENT LISTENER PAGINASI LOG ---
+    logUserFilter.addEventListener('change', () => fetchLogs(1)); // Reset ke halaman 1 saat filter berubah
+    logsPrevButton.addEventListener('click', () => {
+        if (logsCurrentPage > 1) fetchLogs(logsCurrentPage - 1);
+    });
+    logsNextButton.addEventListener('click', () => {
+        fetchLogs(logsCurrentPage + 1);
+    });
 });
